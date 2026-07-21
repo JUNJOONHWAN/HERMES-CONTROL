@@ -53,6 +53,10 @@ jobs:
         run: |
           "$RUNNER_TEMP/hermes-control/current/venv/bin/python" \
             -m pip install -e "$RUNNER_TEMP/hermes-control/current/source[dev]"
+      - name: Expose managed virtualenv to the canonical upstream test runner
+        run: |
+          ln -s "$RUNNER_TEMP/hermes-control/current/venv" \
+            "$RUNNER_TEMP/hermes-control/current/source/.venv"
       - name: Focused HERMES-CONTROL regression
         working-directory: ${{ runner.temp }}/hermes-control/current/source
         run: |
