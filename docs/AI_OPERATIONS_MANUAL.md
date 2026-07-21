@@ -36,6 +36,8 @@ Timeline Code Map stores append-only context, code slices, actions, outputs and 
 
 NeuralLink is a bounded recall adapter installed as a Hermes `pre_llm_call` plugin. It injects relevant historical candidates from Timeline. It does not replace the graph and it does not prove semantic equivalence. Recall remains limited by indexed concepts, lexical/metadata matches, configured character caps, and the final model's ranking. Failure is fail-open so agent execution can continue; doctor and heartbeat must therefore report plugin/index health separately.
 
+Temporal retention is evidence-type based. Live quotes, bars, order books and snapshots default to one-day `market_live`; runtime health, probes and heartbeats default to seven-day `runtime_state`; reports and completed work are `episodic`; policy, contracts, decisions, architecture and know-how are `durable`. An explicit `memory_descriptor.temporal_scope` or `freshness_class` overrides heuristics. Historical cues may include expired evidence only with a `STALE/EXPIRED` label and a current-data revalidation requirement. Run the versioned NeuralLink backfill once after an upgrade so existing feature rows are reclassified without deleting Timeline nodes.
+
 ## 6. Heartbeat
 
 Heartbeat has exactly three public layers:

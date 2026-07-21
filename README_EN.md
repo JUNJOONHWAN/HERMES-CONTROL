@@ -163,7 +163,7 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 | Item | Current contract |
 |---|---|
-| HERMES-CONTROL | `0.1.0` (Alpha) |
+| HERMES-CONTROL | `0.1.1` (Alpha) |
 | Nous Hermes Agent | `0.18.0` |
 | Pinned upstream commit | `5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37` |
 | Python | `>=3.11,<3.14` |
@@ -173,6 +173,8 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 | Optional workers | Codex CLI, generic command adapter, additional OpenCode adapters |
 
 The installer refuses to patch an unsupported upstream version. Activation requires the exact baseline commit, patch SHA-256, a successful `git apply --check`, post-patch SHA-256 verification for 151 files, required paths, and runtime import probes.
+
+`0.1.1` preserves the historical `0.1.0` bundle and ships NeuralLink temporal classification and historical recall as a separate compatibility bundle.
 
 ## Installation
 
@@ -387,6 +389,10 @@ NeuralLink is a `pre_llm_call` recall adapter, not a replacement vector database
 
 The project therefore does not claim to have “solved memory.” It removes embedding-service operations at the cost of semantic-miss risk, while preserving source evidence in Timeline.
 
+Temporal policy no longer treats every node containing a market-related word as a one-day memory. Only live quotes, bars, order books, and snapshots default to one-day `market_live`; service status, health, probes, and heartbeats default to seven-day `runtime_state`. Reports, analyses, actions, and reviews are `episodic`; policies, contracts, decisions, architecture, playbooks, runbooks, and know-how are `durable`. `memory_descriptor.temporal_scope` or `freshness_class` overrides heuristic classification.
+
+Explicit historical cues can include expired nodes, but every such candidate is labelled `STALE/EXPIRED` and must be revalidated before it is used as a current quote or current service state. After an upgrade, the versioned NeuralLink backfill reclassifies existing features without deleting Timeline evidence.
+
 Typed Roadmap separates planning events from their current projection. It stores entity versions, idempotent event ids, dependencies, and schedule intent, then rebuilds projections by replay. Time-based work can preserve both user intent and scheduler representation, such as `KST intent / UTC-stored RRULE`.
 
 ## Heartbeat
@@ -438,7 +444,7 @@ pytest -q
 - [AI operations manual](docs/AI_OPERATIONS_MANUAL.md): installation state machine, cards and receipts, shell and adapter extension, and release gate
 - [Architecture overview](docs/ARCHITECTURE_KO.md): component and execution-flow summary
 - [Upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md): baseline updates and fail-closed policy
-- [Patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0/include-paths.txt): extraction scope of the overlay bundle
+- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.1/include-paths.txt): extraction scope of the overlay bundle
 
 ## Out of scope
 

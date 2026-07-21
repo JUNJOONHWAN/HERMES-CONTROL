@@ -163,7 +163,7 @@ HERMES-CONTROL은 세 경계를 분리합니다.
 
 | 항목 | 현재 계약 |
 |---|---|
-| HERMES-CONTROL | `0.1.0` (Alpha) |
+| HERMES-CONTROL | `0.1.1` (Alpha) |
 | Nous Hermes Agent | `0.18.0` |
 | 고정 upstream commit | `5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37` |
 | Python | `>=3.11,<3.14` |
@@ -173,6 +173,8 @@ HERMES-CONTROL은 세 경계를 분리합니다.
 | 선택 worker | Codex CLI, generic command adapter, 추가 OpenCode adapter |
 
 지원되지 않는 upstream 버전에는 패치를 시도하지 않습니다. baseline commit, patch SHA-256, `git apply --check`, 적용 후 151개 파일의 SHA-256, 필수 경로와 import probe가 모두 맞아야 runtime이 활성화됩니다.
+
+`0.1.1`은 기존 `0.1.0` 번들을 보존하고 별도 호환 번들로 NeuralLink의 시간 분류와 과거 회상을 갱신합니다.
 
 ## 설치
 
@@ -387,6 +389,10 @@ NeuralLink는 Timeline을 대체하는 별도 벡터 DB가 아니라 `pre_llm_ca
 
 따라서 “메모리 문제를 완전히 해결”한다고 주장하지 않습니다. embedding 운영 의존을 줄이는 대신 semantic miss 위험을 받아들였으며, 원본 증거는 Timeline 그래프에 보존합니다.
 
+시간 정책은 노드 전체에 `market`이라는 단어가 있는지만 보지 않습니다. 실시간 quote/bar/orderbook/snapshot만 기본 1일 `market_live`, service status/health/probe/heartbeat만 기본 7일 `runtime_state`로 만료됩니다. report/analysis/action/review는 `episodic`, policy/contract/decision/architecture/playbook/runbook/know-how는 `durable`로 보존됩니다. `memory_descriptor.temporal_scope` 또는 `freshness_class`가 자동 분류보다 우선합니다.
+
+“전에”, “예전”, “과거” 같은 명시적 과거 회상은 만료 노드도 후보로 가져올 수 있지만 반드시 `STALE/EXPIRED`로 표시합니다. 당시 증거는 현재 시세나 현재 서비스 상태로 사용하기 전에 재검증해야 합니다. 업그레이드 후 versioned NeuralLink backfill은 기존 Timeline 노드를 삭제하지 않고 분류만 갱신합니다.
+
 Typed Roadmap은 Kanban과 별개로 계획 event와 projection을 분리합니다. entity version, idempotent event id, dependency, schedule intent를 저장하고 replay로 현재 projection을 재구축합니다. 시간 기반 작업은 `KST intent / UTC-stored RRULE`처럼 의도 시간대와 실행 저장값을 함께 보존할 수 있습니다.
 
 ## Heartbeat
@@ -438,7 +444,7 @@ pytest -q
 - [AI 운영 매뉴얼](docs/AI_OPERATIONS_MANUAL.md): 설치 상태 머신, 카드/receipt, 셸·adapter 추가, release gate
 - [구조 설명](docs/ARCHITECTURE_KO.md): 구성요소와 실행 흐름 요약
 - [Upstream 호환 계약](docs/UPSTREAM_COMPATIBILITY.md): baseline 갱신과 fail-closed 정책
-- [패치 포함 경로](src/hermes_control/compatibility/hermes-agent-0.18.0/include-paths.txt): overlay bundle의 추출 범위
+- [현재 패치 포함 경로](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.1/include-paths.txt): overlay bundle의 추출 범위
 
 ## 범위 밖
 
