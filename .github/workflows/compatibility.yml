@@ -50,7 +50,9 @@ jobs:
       - run: python -m pip install -e .
       - run: hermes-control --root "$RUNNER_TEMP/hermes-control" install
       - name: Install materialized test dependencies
-        run: "$RUNNER_TEMP/hermes-control/current/venv/bin/python" -m pip install -e "$RUNNER_TEMP/hermes-control/current/source[dev]"
+        run: |
+          "$RUNNER_TEMP/hermes-control/current/venv/bin/python" \
+            -m pip install -e "$RUNNER_TEMP/hermes-control/current/source[dev]"
       - name: Focused HERMES-CONTROL regression
         working-directory: ${{ runner.temp }}/hermes-control/current/source
         run: |
