@@ -1,0 +1,76 @@
+name: compatibility
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit-and-materialize:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.11", "3.12", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -e '.[test]'
+      - run: pytest -m 'not integration'
+      - run: hermes-control --root "$RUNNER_TEMP/hermes-control" install --no-deps
+      - run: hermes-control --root "$RUNNER_TEMP/hermes-control" doctor
+
+  full-runtime-smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - run: hermes-control --root "$RUNNER_TEMP/hermes-control" install
+      - run: hermes-control --root "$RUNNER_TEMP/hermes-control" doctor
+      - run: mkdir -p "$RUNNER_TEMP/hermes-state" && touch "$RUNNER_TEMP/hermes-state/config.yaml"
+      - run: hermes-control --root "$RUNNER_TEMP/hermes-control" setup --hermes-home "$RUNNER_TEMP/hermes-state" --dry-run --skip-opencode-install --skip-live-health
+
+  overlay-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - run: hermes-control --root "$RUNNER_TEMP/hermes-control" install
+      - name: Install materialized test dependencies
+        run: "$RUNNER_TEMP/hermes-control/current/venv/bin/python" -m pip install -e "$RUNNER_TEMP/hermes-control/current/source[dev]"
+      - name: Focused HERMES-CONTROL regression
+        working-directory: ${{ runner.temp }}/hermes-control/current/source
+        run: |
+          ./scripts/run_tests.sh -j 4 \
+            tests/agent/test_response_language.py \
+            tests/agent/test_supervisor_codex_bridge.py \
+            tests/agent/test_supervisor_contract.py \
+            tests/hermes_cli/test_artifact_health.py \
+            tests/hermes_cli/test_external_cli_adapter.py \
+            tests/hermes_cli/test_market_role_contract.py \
+            tests/hermes_cli/test_opencode_free_router.py \
+            tests/hermes_cli/test_public_edition.py \
+            tests/hermes_cli/test_supervisor_registry.py \
+            tests/hermes_cli/test_supervisor_tool_catalog.py \
+            tests/run_agent/test_opencode_zen_anonymous_free.py \
+            tests/scripts/test_market_memory.py \
+            tests/test_application_services.py
+      - name: Timeline extension regression
+        working-directory: ${{ runner.temp }}/hermes-control/current/source/extensions/hermes-timeline-code-map
+        run: "../../../venv/bin/python -m pytest tests"
+      - name: Full upstream regression
+        working-directory: ${{ runner.temp }}/hermes-control/current/source
+        run: ./scripts/run_tests.sh -j 4 --exclude-manifest distribution/validation/test_exclusions.json

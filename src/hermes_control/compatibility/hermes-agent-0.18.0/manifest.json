@@ -1,0 +1,35 @@
+{
+  "schema": "hermes-control.compatibility.v1",
+  "overlay_version": "0.1.0",
+  "upstream": {
+    "name": "NousResearch/hermes-agent",
+    "url": "https://github.com/NousResearch/hermes-agent.git",
+    "version": "0.18.0",
+    "baseline_commit": "5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37"
+  },
+  "python": {
+    "min_inclusive": "3.11",
+    "max_exclusive": "3.14"
+  },
+  "platforms": [
+    "linux",
+    "darwin"
+  ],
+  "bundle": {
+    "patch_file": "patches/hermes-agent-0.18.0.patch.gz",
+    "patch_sha256": "eb94543f25428cb963f89ae6fdca61f36cbcf33ad00652f80e7a3e4206d83389",
+    "checksums_file": "compatibility/hermes-agent-0.18.0/files.sha256",
+    "checksums_sha256": "a38b802f3d52b8720629ea2fa20531b3f6ae5146846ffb5a6a21d1458a2eb061",
+    "patched_file_count": 151,
+    "source_head": "069841d66aa9388eb79fdf252696224a773bc520"
+  },
+  "required_paths": [
+    "agent/supervisor_contract.py",
+    "hermes_cli/public_edition.py",
+    "hermes_cli/supervisor_bootstrap.py",
+    "tools/supervisor_tools.py",
+    "scripts/setup_public_edition.py",
+    "extensions/hermes-timeline-code-map/pyproject.toml",
+    "extensions/hermes-timeline-code-map/deploy/hermes_plugin/timeline-neural-link/plugin.yaml"
+  ]
+}
