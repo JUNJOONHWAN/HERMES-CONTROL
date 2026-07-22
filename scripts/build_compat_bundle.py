@@ -26,7 +26,7 @@ def main() -> int:
     parser.add_argument("--source-repo", type=Path, required=True)
     parser.add_argument("--baseline", required=True)
     parser.add_argument("--head", default="HEAD")
-    parser.add_argument("--compat-id", default="hermes-agent-0.18.0-control-0.1.2")
+    parser.add_argument("--compat-id", default="hermes-agent-0.18.0-control-0.1.3")
     parser.add_argument(
         "--project-root", type=Path, default=Path(__file__).resolve().parents[1]
     )
@@ -48,6 +48,21 @@ def main() -> int:
     ]
     capture(["git", "cat-file", "-e", f"{args.baseline}^{{commit}}"], cwd=source)
     head = capture(["git", "rev-parse", args.head], cwd=source, text=True).strip()
+    release = json.loads(
+        capture(
+            ["git", "show", f"{head}:distribution/release.json"],
+            cwd=source,
+            text=True,
+        )
+    )
+    if release.get("schema") != "hermes.distribution-release.v1":
+        raise SystemExit("source distribution release schema is unsupported")
+    if release.get("distribution_version") != payload["overlay_version"]:
+        raise SystemExit(
+            "source distribution version does not match overlay version"
+        )
+    if release.get("engine_version") != payload["upstream"]["version"]:
+        raise SystemExit("source engine version does not match upstream version")
     command = ["git", "diff", "--binary", args.baseline, head, "--", *paths]
     raw_patch = capture(command, cwd=source)
     if not raw_patch:

@@ -163,7 +163,7 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 | Item | Current contract |
 |---|---|
-| HERMES-CONTROL | `0.1.2` (Alpha) |
+| HERMES-CONTROL | `0.1.3` (Alpha) |
 | Nous Hermes Agent | `0.18.0` |
 | Pinned upstream commit | `5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37` |
 | Python | `>=3.11,<3.14` |
@@ -174,7 +174,7 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 The installer refuses to patch an unsupported upstream version. Activation requires the exact baseline commit, patch SHA-256, a successful `git apply --check`, post-patch SHA-256 verification for 151 files, required paths, and runtime import probes.
 
-`0.1.2` preserves the historical `0.1.0` and `0.1.1` bundles and adds live progress visibility plus preservation of the direct final answer.
+`0.1.3` preserves the historical `0.1.0` through `0.1.2` bundles and enforces the common HERMES-TEAM distribution version `0.1.3`.
 
 ## Installation
 
@@ -444,7 +444,7 @@ pytest -q
 - [AI operations manual](docs/AI_OPERATIONS_MANUAL.md): installation state machine, cards and receipts, shell and adapter extension, and release gate
 - [Architecture overview](docs/ARCHITECTURE_KO.md): component and execution-flow summary
 - [Upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md): baseline updates and fail-closed policy
-- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.2/include-paths.txt): extraction scope of the overlay bundle
+- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.3/include-paths.txt): extraction scope of the overlay bundle
 
 ## Out of scope
 
