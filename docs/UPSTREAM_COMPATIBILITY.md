@@ -23,7 +23,7 @@ Each supported upstream line owns these immutable artifacts:
 6. Run `hermes-control doctor` and compare every listed file checksum.
 7. Install dependencies in a clean venv and run import probes.
 8. Run focused HERMES-CONTROL tests, Timeline tests, upstream full regression, privacy scan, Linux matrix, and macOS matrix.
-9. Run public setup against a temporary Hermes home. Confirm 7 role shells, bindings, six root control tools including `supervisor_project`, Project/Card web API, Timeline MCP, NeuralLink plugin, OpenCode adapter/controller, and three heartbeat layers.
+9. Run public setup against a temporary Hermes home. Confirm 8 role shells including the Hermes-only maintainer, bindings, six root control tools including `supervisor_project`, Project/Card web API, Timeline MCP, NeuralLink plugin, OpenCode and strict-free OpenRouter controller adapters, and three heartbeat layers.
 10. Record the new compatibility manifest only after all gates are green.
 
 ## Why a core patch still exists

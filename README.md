@@ -26,7 +26,7 @@ HERMES-CONTROL은 작은 installer만 제공하는 프로젝트가 아닙니다.
 | Root Controller | 도메인 MCP 없이 여섯 supervisor 도구로 상태·자동화·역할·위임·프로젝트/카드·adapter를 통제 |
 | Project/Card Controller | 별도 Project DB, `p_*`/`t_*` 이중 ID, `pa_*` 승인, 실행 중 stop/checkpoint 방향 전환, pause/reopen, typed relation, 신규·후속·분할·검증·복구를 웹·텔레그램 공통 경로에서 관리 |
 | 프로젝트 Git 관리 | existing/init-local/GitHub 저장소 등록, private/public 선택, 카드 branch checkpoint commit/push와 default-branch 직접 push 차단 |
-| 7개 Role Shell | `code`, `market`, `browser-research`, `operations`, `report`, `verification`, `tool-management` |
+| 8개 Role Shell | `code`, `market`, `browser-research`, `operations`, `report`, `verification`, `tool-management`, `hermes-repair` |
 | Adapter Control Plane | controller와 worker executor 분리, 다대다 Binding, capacity/health/capability gate, task/shell/all override |
 | 멀티툴·MCP 관리 | profile별 MCP·skill·plugin·toolset·callable tool inventory/search, 최소 배치, backup, probe, rollback |
 | 증거·완료 | 카드 claim과 shell/executor/binding provenance 원자적 고정, Timeline 증거를 검사하는 Receipt Gate |
@@ -183,7 +183,7 @@ HERMES-CONTROL은 세 경계를 분리합니다.
 
 | 항목 | 현재 계약 |
 |---|---|
-| HERMES-CONTROL | `0.1.6` (Alpha) |
+| HERMES-CONTROL | `0.1.7` (Alpha) |
 | Nous Hermes Agent | `0.18.0` |
 | 고정 upstream commit | `5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37` |
 | Python | `>=3.11,<3.14` |
@@ -194,7 +194,7 @@ HERMES-CONTROL은 세 경계를 분리합니다.
 
 지원되지 않는 upstream 버전에는 패치를 시도하지 않습니다. baseline commit, patch SHA-256, `git apply --check`, manifest의 모든 patched file SHA-256, 필수 경로와 import probe가 모두 맞아야 runtime이 활성화됩니다.
 
-`0.1.6`은 기존 `0.1.0`~`0.1.5` 번들을 보존하고, HERMES-TEAM과 공통 배포 버전 `0.1.6`을 강제합니다. 일반 Kanban 카드의 `pause_card`, `resume_card`, `steer_card`를 포함해 해당 카드의 worker만 중지하고 같은 `t_*` ID로 재개하거나 다음 run 지시를 바꿀 수 있습니다. Gateway, 다른 카드, 자동화 정의는 중지하지 않습니다.
+`0.1.7`은 기존 `0.1.0`~`0.1.6` 번들을 보존하고, HERMES-TEAM과 공통 배포 버전 `0.1.7`을 강제합니다. 일반 프로젝트 코딩·수선은 기존 `code`/`operations`와 저비용 실행기에 남기고, Hermes 자체 controller·adapter·Role Shell·router·supervisor 설정만 새 `hermes-repair`가 `gpt-5.6-sol/high`로 처리합니다. OpenRouter 무료 controller는 무작위 router 대신 엄격한 무료·tool 조건과 strongest-first 순서형 fallback을 사용합니다.
 
 ## 설치
 
@@ -262,7 +262,7 @@ hermes-control install --source /path/to/hermes-agent
 
 모든 명령은 JSON 결과를 반환하므로 사람뿐 아니라 AI 운영자와 자동화가 동일한 상태 계약을 읽을 수 있습니다.
 
-## Root Controller와 7개 Role Shell
+## Root Controller와 8개 Role Shell
 
 Root Hermes는 일반 worker가 아닙니다. root MCP catalog는 비어 있고 다음 여섯 제어 도구만 사용합니다.
 
@@ -286,6 +286,7 @@ supervisor_adapter     controller/executor/binding/override/tool catalog 관리
 | `report` | 상위 receipt 기반 보고서 조립 | file, kanban, Timeline | 중간 산출물을 완료로 승격 금지 |
 | `verification` | 독립 회귀·최종 게이트 | file, terminal, kanban, Timeline | baseline failure와 새 regression 분리 |
 | `tool-management` | MCP·skill·plugin·toolset lifecycle | file, terminal, skills, kanban, Timeline | 최소 권한 배치, backup/probe/rollback 의무 |
+| `hermes-repair` | Hermes 자체 제어면·adapter·shell·router·설정 수선 | file, terminal, kanban, Timeline | 일반 프로젝트 코딩 금지; `gpt-5.6-sol/high` 고정 및 교체 인증 필수 |
 
 Role Shell row는 SQLite trigger로 update/delete가 금지됩니다. 정책 변경은 같은 `shell_key`의 새 version과 새 contract hash로만 가능하므로 과거 카드가 어떤 계약 아래 실행됐는지 유지됩니다.
 
@@ -439,7 +440,7 @@ Heartbeat의 공개 출력은 정확히 세 층입니다.
 
 ## 검증
 
-0.1.5 배포의 기존 검증 기록은 다음과 같습니다. 0.1.6은 새 immutable bundle과 현재 GitHub Actions에서 별도로 검증합니다.
+0.1.5 배포의 기존 검증 기록은 다음과 같습니다. 0.1.7은 새 immutable bundle과 현재 GitHub Actions에서 별도로 검증합니다.
 
 - HERMES-CONTROL unit: 19 passed
 - 공식 upstream source-backed installer: 2 passed
@@ -448,7 +449,7 @@ Heartbeat의 공개 출력은 정확히 세 층입니다.
 - Timeline extension: 44 passed
 - 전체 materialized upstream regression: 1,844 files, 38,275 passed, 0 failed
 - macOS ARM Python 3.11/3.12/3.13 unit: 각 19 passed
-- Linux setup dry-run: 7 role shells, 빈 Root MCP, Timeline/NeuralLink 계획 검증
+- Linux setup dry-run: 7 role shells, 빈 Root MCP, Timeline/NeuralLink 계획 검증(0.1.5 기록)
 - Ruff, sdist/wheel build, wheel install smoke, privacy scan, README link, `git diff --check`: passed
 
 ### 0.1.0 역사적 검증 기록
@@ -479,7 +480,7 @@ pytest -q
 - [AI 운영 매뉴얼](docs/AI_OPERATIONS_MANUAL.md): 설치 상태 머신, 카드/receipt, 셸·adapter 추가, release gate
 - [구조 설명](docs/ARCHITECTURE_KO.md): 구성요소와 실행 흐름 요약
 - [Upstream 호환 계약](docs/UPSTREAM_COMPATIBILITY.md): baseline 갱신과 fail-closed 정책
-- [현재 패치 포함 경로](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.6/include-paths.txt): overlay bundle의 추출 범위
+- [현재 패치 포함 경로](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.7/include-paths.txt): overlay bundle의 추출 범위
 
 ## 범위 밖
 

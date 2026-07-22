@@ -26,7 +26,7 @@ HERMES-CONTROL is not just a small installer. The installer reproduces the follo
 | Root Controller | Controls status, automation, roles, delegation, projects/cards, and adapters through six supervisor tools with no domain MCP attached |
 | Project/Card Controller | Separate Project DB, dual `p_*`/`t_*` identity, `pa_*` approval, stop/checkpoint direction changes, pause/reopen, typed relations, and shared web/Telegram actions |
 | Project Git management | Existing/init-local/GitHub repository setup, private/public selection, card-branch checkpoint commit/push, and default-branch push denial |
-| Seven Role Shells | `code`, `market`, `browser-research`, `operations`, `report`, `verification`, and `tool-management` |
+| Eight Role Shells | `code`, `market`, `browser-research`, `operations`, `report`, `verification`, `tool-management`, and `hermes-repair` |
 | Adapter Control Plane | Separate controller and worker axes, many-to-many Bindings, capacity/health/capability gates, and task/shell/all overrides |
 | Multitool and MCP management | Per-profile MCP, skill, plugin, toolset, and callable-tool inventory/search; minimal assignment, backup, probes, and rollback |
 | Evidence and completion | Atomic shell/executor/binding provenance at claim time and a Receipt Gate backed by Timeline evidence |
@@ -183,7 +183,7 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 | Item | Current contract |
 |---|---|
-| HERMES-CONTROL | `0.1.6` (Alpha) |
+| HERMES-CONTROL | `0.1.7` (Alpha) |
 | Nous Hermes Agent | `0.18.0` |
 | Pinned upstream commit | `5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37` |
 | Python | `>=3.11,<3.14` |
@@ -194,7 +194,7 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 The installer refuses to patch an unsupported upstream version. Activation requires the exact baseline commit, patch SHA-256, a successful `git apply --check`, SHA-256 verification of every file declared by the manifest, required paths, and runtime import probes.
 
-`0.1.6` preserves the historical `0.1.0` through `0.1.5` bundles and enforces the common HERMES-TEAM distribution version `0.1.6`. It adds `pause_card`, `resume_card`, and `steer_card` for ordinary Kanban cards: only that card's worker is stopped, while the same `t_*` ID can be resumed or given a durable instruction for its next run. The gateway, other cards, and automation definitions remain running.
+`0.1.7` preserves the historical `0.1.0` through `0.1.6` bundles and enforces the common HERMES-TEAM distribution version `0.1.7`. Ordinary project coding and repair remain on `code`/`operations` with lower-cost executors; only Hermes controller, adapter, Role Shell, router, and supervisor-configuration maintenance uses the new `hermes-repair` lane pinned to `gpt-5.6-sol/high`. The strict-free OpenRouter controller uses capability filtering and strongest-first ordered fallback instead of the random free router.
 
 ## Installation
 
@@ -262,7 +262,7 @@ hermes-control install --source /path/to/hermes-agent
 
 Commands return JSON so that human operators, AI maintainers, and automation read the same state contract.
 
-## Root Controller and seven Role Shells
+## Root Controller and eight Role Shells
 
 Root Hermes is not a general-purpose worker. Its MCP catalog is empty, and it operates through six control tools.
 
@@ -275,7 +275,7 @@ supervisor_project     project/card lifecycle, independent roots, follow-up, spl
 supervisor_adapter     controller/executor/binding/override/tool-catalog control
 ```
 
-Domain work must pass through one of seven immutable, versioned Role Shells.
+Domain work must pass through one of eight immutable, versioned Role Shells.
 
 | Role Shell | Responsibility | Required capability summary | Key boundary |
 |---|---|---|---|
@@ -286,6 +286,7 @@ Domain work must pass through one of seven immutable, versioned Role Shells.
 | `report` | Report assembly from upstream receipts | file, kanban, Timeline | Intermediate artifacts cannot become completion |
 | `verification` | Independent regression and final gates | file, terminal, kanban, Timeline | Separates baseline failures from new regressions |
 | `tool-management` | MCP, skill, plugin, and toolset lifecycle | file, terminal, skills, kanban, Timeline | Minimal assignment with backup, probes, and rollback |
+| `hermes-repair` | Hermes control-plane, adapter, shell, router, and configuration maintenance | file, terminal, kanban, Timeline | No ordinary project coding; pinned `gpt-5.6-sol/high` with replacement certification |
 
 SQLite triggers reject updates and deletes of Role Shell rows. Policy changes require a new version and contract hash under the same `shell_key`, preserving the exact contract used by historical cards.
 
@@ -439,7 +440,7 @@ See the [upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md) for th
 
 ## Validation
 
-The following numbers are the existing 0.1.5 validation record. Version 0.1.6 is validated separately through its new immutable bundle and current GitHub Actions run.
+The following numbers are the existing 0.1.5 validation record. Version 0.1.7 is validated separately through its new immutable bundle and current GitHub Actions run.
 
 - HERMES-CONTROL unit suite: 19 passed
 - Official-upstream source-backed installer module: 2 passed
@@ -448,7 +449,7 @@ The following numbers are the existing 0.1.5 validation record. Version 0.1.6 is
 - Timeline extension suite: 44 passed
 - Full materialized upstream regression: 1,844 files, 38,275 passed, 0 failed
 - macOS ARM Python 3.11/3.12/3.13 unit suites: 19 passed on each version
-- Linux setup dry-run: 7 role shells, empty Root MCP, Timeline/NeuralLink plan verified
+- Linux setup dry-run: 7 role shells, empty Root MCP, Timeline/NeuralLink plan verified (0.1.5 record)
 - Ruff, sdist/wheel build, wheel-install smoke, privacy, README-link, and `git diff --check` gates: passed
 
 ### Historical 0.1.0 validation record
@@ -479,7 +480,7 @@ pytest -q
 - [AI operations manual](docs/AI_OPERATIONS_MANUAL.md): installation state machine, cards and receipts, shell and adapter extension, and release gate
 - [Architecture overview](docs/ARCHITECTURE_KO.md): component and execution-flow summary
 - [Upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md): baseline updates and fail-closed policy
-- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.6/include-paths.txt): extraction scope of the overlay bundle
+- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.7/include-paths.txt): extraction scope of the overlay bundle
 
 ## Out of scope
 
