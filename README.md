@@ -183,7 +183,7 @@ HERMES-CONTROL은 세 경계를 분리합니다.
 
 | 항목 | 현재 계약 |
 |---|---|
-| HERMES-CONTROL | `0.1.5` (Alpha) |
+| HERMES-CONTROL | `0.1.6` (Alpha) |
 | Nous Hermes Agent | `0.18.0` |
 | 고정 upstream commit | `5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37` |
 | Python | `>=3.11,<3.14` |
@@ -194,7 +194,7 @@ HERMES-CONTROL은 세 경계를 분리합니다.
 
 지원되지 않는 upstream 버전에는 패치를 시도하지 않습니다. baseline commit, patch SHA-256, `git apply --check`, manifest의 모든 patched file SHA-256, 필수 경로와 import probe가 모두 맞아야 runtime이 활성화됩니다.
 
-`0.1.5`는 기존 `0.1.0`~`0.1.4` 번들을 보존하고, HERMES-TEAM과 공통 배포 버전 `0.1.5`를 강제합니다.
+`0.1.6`은 기존 `0.1.0`~`0.1.5` 번들을 보존하고, HERMES-TEAM과 공통 배포 버전 `0.1.6`을 강제합니다. 일반 Kanban 카드의 `pause_card`, `resume_card`, `steer_card`를 포함해 해당 카드의 worker만 중지하고 같은 `t_*` ID로 재개하거나 다음 run 지시를 바꿀 수 있습니다. Gateway, 다른 카드, 자동화 정의는 중지하지 않습니다.
 
 ## 설치
 
@@ -439,7 +439,7 @@ Heartbeat의 공개 출력은 정확히 세 층입니다.
 
 ## 검증
 
-0.1.5 배포 후보는 다음 게이트를 대상으로 검증합니다. 아래 수치는 공개 전 최종 실행 결과로 갱신합니다.
+0.1.5 배포의 기존 검증 기록은 다음과 같습니다. 0.1.6은 새 immutable bundle과 현재 GitHub Actions에서 별도로 검증합니다.
 
 - HERMES-CONTROL unit: 19 passed
 - 공식 upstream source-backed installer: 2 passed
@@ -479,7 +479,7 @@ pytest -q
 - [AI 운영 매뉴얼](docs/AI_OPERATIONS_MANUAL.md): 설치 상태 머신, 카드/receipt, 셸·adapter 추가, release gate
 - [구조 설명](docs/ARCHITECTURE_KO.md): 구성요소와 실행 흐름 요약
 - [Upstream 호환 계약](docs/UPSTREAM_COMPATIBILITY.md): baseline 갱신과 fail-closed 정책
-- [현재 패치 포함 경로](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.5/include-paths.txt): overlay bundle의 추출 범위
+- [현재 패치 포함 경로](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.6/include-paths.txt): overlay bundle의 추출 범위
 
 ## 범위 밖
 

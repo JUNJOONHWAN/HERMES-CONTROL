@@ -183,7 +183,7 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 | Item | Current contract |
 |---|---|
-| HERMES-CONTROL | `0.1.5` (Alpha) |
+| HERMES-CONTROL | `0.1.6` (Alpha) |
 | Nous Hermes Agent | `0.18.0` |
 | Pinned upstream commit | `5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37` |
 | Python | `>=3.11,<3.14` |
@@ -194,7 +194,7 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 The installer refuses to patch an unsupported upstream version. Activation requires the exact baseline commit, patch SHA-256, a successful `git apply --check`, SHA-256 verification of every file declared by the manifest, required paths, and runtime import probes.
 
-`0.1.5` preserves the historical `0.1.0` through `0.1.4` bundles and enforces the common HERMES-TEAM distribution version `0.1.5`.
+`0.1.6` preserves the historical `0.1.0` through `0.1.5` bundles and enforces the common HERMES-TEAM distribution version `0.1.6`. It adds `pause_card`, `resume_card`, and `steer_card` for ordinary Kanban cards: only that card's worker is stopped, while the same `t_*` ID can be resumed or given a durable instruction for its next run. The gateway, other cards, and automation definitions remain running.
 
 ## Installation
 
@@ -439,7 +439,7 @@ See the [upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md) for th
 
 ## Validation
 
-The 0.1.5 release candidate targets the following gates. Counts are refreshed from the final pre-publication run.
+The following numbers are the existing 0.1.5 validation record. Version 0.1.6 is validated separately through its new immutable bundle and current GitHub Actions run.
 
 - HERMES-CONTROL unit suite: 19 passed
 - Official-upstream source-backed installer module: 2 passed
@@ -479,7 +479,7 @@ pytest -q
 - [AI operations manual](docs/AI_OPERATIONS_MANUAL.md): installation state machine, cards and receipts, shell and adapter extension, and release gate
 - [Architecture overview](docs/ARCHITECTURE_KO.md): component and execution-flow summary
 - [Upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md): baseline updates and fail-closed policy
-- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.5/include-paths.txt): extraction scope of the overlay bundle
+- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.6/include-paths.txt): extraction scope of the overlay bundle
 
 ## Out of scope
 

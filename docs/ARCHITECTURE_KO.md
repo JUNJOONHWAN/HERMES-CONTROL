@@ -43,6 +43,8 @@ Project DB는 `p_*` identity, phase, milestone, next action, `pa_*` code-card ap
 
 진행 중 카드의 범위·산출물·Role Shell·완료 조건이 크게 바뀌면 실행기 입력에 새 프롬프트를 주입하지 않는다. `request_direction_change`가 후속 계약을 선검증하고 Project를 pause한 다음 원본 `t_*`를 archive해 프로세스 그룹과 재디스패치를 닫는다. Git 작업공간은 현재 변경을 direction-change checkpoint commit으로 고정하고, 비-Git 작업공간은 파일을 그대로 보존하며 `not_applicable`을 기록한다. 그 뒤에도 `t_*`는 만들지 않고 `pa_*` 승인 초안만 저장한다. 별도 승인 후 만들어진 후속은 원본과 비차단 `references`로 연결되어, 의도적으로 미완료인 원본 때문에 대기하지 않으면서도 run·댓글·checkpoint SHA 계보를 보존한다. 거절은 후속을 만들지 않고 archived 원본도 삭제하지 않는다.
 
+일반 비종결 `t_*` 카드의 `pause_card`는 먼저 durable `operator_pause` 상태를 기록하고 그 카드의 host-local worker process group만 종료한다. `resume_card`는 worker PID가 남지 않았을 때 같은 카드 ID를 새 run attempt로 돌려보낸다. `steer_card`는 안전 중지 후 다음 run 지시를 comment로 저장하고 같은 ID를 재개한다. Gateway, 다른 실행기, 자동화 정의는 건드리지 않으며, Project의 산출물·범위·Role Shell·완료 조건이 달라지는 큰 변경은 계속 `request_direction_change`와 별도 `pa_*` 승인을 사용한다.
+
 카드 관계는 실행 의미를 가진다. `depends_on`, `follows`, `reviews`는 부모가 끝날 때까지 자식을 막고, `references`, `recovers`는 병렬 분할과 실패 복구가 즉시 실행되도록 lineage만 보존한다. 후속 작업은 기존 `root_task_id`를 상속하고, 독립 신규 작업은 같은 Project 안에서 자기 자신을 root로 갖는 새 thread를 연다. 완료 카드는 수정하지 않고 새 카드를 연결하므로 수개월 뒤 재개해도 과거 receipt와 adapter provenance가 유지된다.
 
 workspace도 컨트롤러가 카드 생성 전에 결정한다. Project 경로가 없으면 관리형 `scratch`, 일반 디렉터리면 역할과 무관하게 보존형 `dir`, Git 저장소에서 실행하는 `code` 카드면 카드별 linked `worktree`다. 따라서 비-Git 프로젝트를 worktree로 잘못 예약해 실행 단계에서 반복 실패시키지 않는다. 명시적 worktree는 절대경로와 Git anchor를 선검증하며, 실패 복구는 원본을 수정하지 않고 workspace를 교정한 `recovers` 카드를 발행한다. 복구 Receipt가 완료되면 원본 blocked 시도만 archive되고 실행·오류·계보 증거는 보존된다.
