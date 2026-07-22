@@ -9,7 +9,7 @@ from hermes_control.manifest import ManifestError, bundled_manifest
 def test_bundled_manifest_is_strict_and_complete():
     manifest = bundled_manifest()
     assert manifest.schema == "hermes-control.compatibility.v1"
-    assert manifest.overlay_version == "0.1.4"
+    assert manifest.overlay_version == "0.1.5"
     assert manifest.baseline_commit == "5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37"
     assert manifest.platforms == ("linux", "darwin")
     assert manifest.patched_file_count > 50

@@ -30,15 +30,21 @@ A card is the authoritative work unit. It contains objective, role, dependencies
 
 The gateway sends results from validated receipt state. It does not treat an unverified worker message as final delivery evidence.
 
-Project and card graph changes are controller operations, not adapter work. Use the same native service through `supervisor_project` (chat, Telegram, CLI root) or the Kanban Project/Card API (web UI):
+Project and card graph changes are controller operations, not adapter work. Use the same native service through `supervisor_project` (chat, Telegram, CLI root) or the Kanban Project/Card API (web UI). A subscribed card's `claimed` event must emit one Telegram working notification containing both `project_id` and `task_id`; cursor advancement is the deduplication boundary:
 
 - `start_project`: create Project metadata and its first self-rooted card;
 - `add_project_card`: create a new independent root-card thread in an existing active Project;
 - `continue_card`: create a `follows` card in the same root thread;
+- `request_direction_change`: pause the Project, stop/archive the source run, checkpoint Git when applicable, and create only a `pa_*` non-blocking successor proposal;
 - `split_card`: create parallel `references` cards without waiting on the container card;
 - `verify_card`: create a `reviews` card gated on source completion;
 - `recover_card`: create a non-blocking `recovers` card and recovery-source provenance;
-- `close_project` / `reopen_project`: transition project state; close refuses open cards;
+- `pause_project` / `reopen_project`: stop or resume card creation; pause refuses running cards and clears the active pointer;
+- `propose_project_card`: create a durable `pa_*` request for code work without creating a Kanban card;
+- `approve_project_card` / `reject_project_card`: resolve a pending proposal; only approval creates exactly one `t_*` card;
+- `setup_project_repository`: register `none`, `existing`, `init_local`, or `github` repository mode;
+- `commit_project_card` / `push_project_card`: checkpoint and publish a card branch while denying direct default-branch push;
+- `close_project`: terminal project transition; it refuses open cards and pending approvals;
 - `list_projects`: return every visible Project with status, path, card/thread counts, and status counts;
 - `inspect_card`, `inspect_project`, and `locate_card`: reconstruct old work without rewriting completed cards.
 
@@ -55,6 +61,36 @@ Workspace selection is also a controller invariant, not an adapter guess:
 - an explicit recovery override: pass `workspace_kind` and `workspace_path` through either `supervisor_project` or the Web recovery endpoint.
 
 If workspace resolution fails after an older card was created, leave that failed card blocked and issue `recover_card`. The recovery is immediately runnable because `recovers` is non-blocking. Successful receipt commit archives the blocked source attempt but preserves its runs, errors, comments, provenance, and lineage. Do not initialize Git, move the Project, or mutate the failed card merely to make dispatch succeed unless the operator separately authorizes that repository change.
+
+Project and execution state are separate ledgers. `projects.db` owns `p_*`
+identity, phase, milestone, next action, `pa_*` approvals, repository state and
+Git events. `kanban.db` owns executable `t_*` cards, links, runs, receipts and
+notification cursors. Never repair one by editing the other directly.
+
+Code proposals are a hard two-turn boundary. The proposing turn may create
+only `pa_*` and must leave the Project `paused`. Approval must be a later,
+explicit operator action; neither the controller nor a worker may approve the
+proposal in the same turn. Repeated identical proposals return the existing
+pending approval. Rejection creates no card, and card-creation failure restores
+the pending approval and paused state.
+
+Material mid-card direction changes are a hard stop/checkpoint/approval
+boundary, not live prompt injection. Validate the successor contract first,
+then pause the Project, archive the source card so its process group cannot be
+redispatched, and record the current Git worktree as a direction-change
+checkpoint. A non-Git workspace is preserved with `not_applicable` checkpoint
+status. Store only a `pa_*` proposal and show Project ID, source Card ID,
+checkpoint status/SHA, and approval ID. A later `approve_project_card` creates
+one successor with non-blocking `references` lineage; rejection creates none
+and leaves the archived source evidence intact. Never request and approve the
+successor in the same turn. Small corrections that keep the deliverable and
+acceptance criteria unchanged may use the normal same-card comment/retry path.
+
+A repository write is also controller-owned. Card work uses its isolated
+worktree branch. Checkpoint commit and optional push are recorded in
+`project_git_events`; direct push of `main`, `master`, or the configured
+default branch is rejected. Repository creation and visibility are explicit
+operator choices and credentials stay in operator state.
 
 ## 5. Timeline Code Map and NeuralLink
 
@@ -125,4 +161,4 @@ The public edition includes only the schema and tooling frame. A private know-ho
 
 ## 11. Release gate
 
-Do not report a release complete unless bundle hashes, fresh materialization, doctor, setup dry-run, focused tests, Timeline tests, full upstream regression, privacy scan, macOS/Linux validation and rollback all pass. If any one is missing, name the missing gate.
+Do not report a release complete unless bundle hashes, fresh materialization, doctor, setup dry-run, focused tests, Timeline tests, full upstream regression, privacy scan, macOS/Linux validation and rollback all pass. Project approval tests must prove that proposing code creates no `t_*`, approval creates one, pause blocks writes, a direction change archives/checkpoints the source and creates no successor before separate approval, the approved successor uses non-blocking lineage, direct default-branch push is denied, a `claimed` event sends exactly one working notification with both IDs, and notification subscriptions do not replay old events. If any one is missing, name the missing gate.

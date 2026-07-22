@@ -24,7 +24,8 @@ HERMES-CONTROL is not just a small installer. The installer reproduces the follo
 | Multiple boards | Isolated SQLite DB, workspace, logs, and attachments per project; dashboard board switcher; board-pinned workers |
 | Card execution kernel | Durable tasks, atomic claims, dependency promotion, idempotent creation, crash/stale reclaim, circuit breaker, and structured completion |
 | Root Controller | Controls status, automation, roles, delegation, projects/cards, and adapters through six supervisor tools with no domain MCP attached |
-| Project/Card Controller | Deterministic project lifecycle, independent root-card threads, typed relations, and new/follow-up/split/verify/recover actions shared by web and Telegram |
+| Project/Card Controller | Separate Project DB, dual `p_*`/`t_*` identity, `pa_*` approval, stop/checkpoint direction changes, pause/reopen, typed relations, and shared web/Telegram actions |
+| Project Git management | Existing/init-local/GitHub repository setup, private/public selection, card-branch checkpoint commit/push, and default-branch push denial |
 | Seven Role Shells | `code`, `market`, `browser-research`, `operations`, `report`, `verification`, and `tool-management` |
 | Adapter Control Plane | Separate controller and worker axes, many-to-many Bindings, capacity/health/capability gates, and task/shell/all overrides |
 | Multitool and MCP management | Per-profile MCP, skill, plugin, toolset, and callable-tool inventory/search; minimal assignment, backup, probes, and rollback |
@@ -64,13 +65,15 @@ The web board provides:
 - diagnostics for stale runs, hallucinated task references, and receipt problems;
 - authenticated WebSocket updates from the append-only task event stream;
 - board creation, switching, and archival with isolated DB, workspace, logs, and attachments per board.
-- project filtering, project start/close/reopen, and `New root card`, `Follow-up`, `Split`, `Verify`, and `Recover` actions.
+- project filtering, project start/close/reopen, and `New root card`, `Follow-up`, `Change direction`, `Split`, `Verify`, and `Recover` actions.
 
 ### Project/Card Controller
 
 Project management is not delegated to a worker adapter. `supervisor_project` and the Kanban API call the same deterministic controller service, and only that service commits project state and the card relation graph. Adapters execute the resulting cards under their Role Shell contracts.
 
-- A Project follows `active → completed → active`; closing is rejected while any card remains open.
+- A Project supports `active ↔ paused` and `active → completed → active`; pause is rejected while a card runs, and close is rejected while cards or approvals remain open.
+- A code-card request does not immediately create `t_*`. It stores only a `pa_*` request and pauses the Project; a later operator action must approve it before exactly one card is created. Duplicate proposals are deduplicated.
+- When scope, deliverable, Role Shell, or acceptance criteria materially changes mid-run, `Change direction` stops and archives the source, checkpoints its Git workspace, and stores only a `pa_*` successor draft. No successor `t_*` exists or dispatches before a separate approval; once approved, it retains non-blocking `references` lineage to the preserved source.
 - The first card points `root_task_id` to itself. Follow-ups, splits, reviews, and recoveries inherit the same thread root.
 - Relations are typed as `depends_on`, `follows`, `reviews`, `recovers`, or `references`. The first three gate execution; the last two preserve recovery/parallel lineage without blocking work.
 - Every card stores explicit `acceptance_criteria` and `input_refs`.
@@ -78,6 +81,8 @@ Project management is not delegated to a worker adapter. `supervisor_project` an
 - Recovery never rewrites the failed card. `Recover` creates a new card with `recovers` lineage; once that card passes the Receipt Gate, the blocked source attempt is archived with its audit history intact. Both Web and Telegram may explicitly override the recovery workspace.
 - Completed cards are immutable. Months later, the operator can locate the card ID and issue a linked follow-up or create a new root card.
 - The web UI and Telegram/Supervisor do not maintain separate state; both use the same Project DB and board DB.
+- Project Git supports `none`, `existing`, `init_local`, and `github` modes. Only card worktree branches may be committed or pushed; direct pushes to `main`, `master`, or the default branch are rejected.
+- Telegram and the dashboard always show Project `p_*` and Card `t_*` together. On an actual claim, Telegram emits one `🔄 작업중 · <title>` (working) notification with both IDs; completion, pause, and failure messages retain the same dual identity. New subscriptions start at the current event cursor so old failures are not replayed.
 
 Cards are stored in `~/.hermes/kanban.db` or, for a named board, `~/.hermes/kanban/boards/<slug>/kanban.db`. Each task chooses a workspace policy.
 
@@ -178,7 +183,7 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 | Item | Current contract |
 |---|---|
-| HERMES-CONTROL | `0.1.4` (Alpha) |
+| HERMES-CONTROL | `0.1.5` (Alpha) |
 | Nous Hermes Agent | `0.18.0` |
 | Pinned upstream commit | `5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37` |
 | Python | `>=3.11,<3.14` |
@@ -189,7 +194,7 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 The installer refuses to patch an unsupported upstream version. Activation requires the exact baseline commit, patch SHA-256, a successful `git apply --check`, SHA-256 verification of every file declared by the manifest, required paths, and runtime import probes.
 
-`0.1.4` preserves the historical `0.1.0` through `0.1.3` bundles and enforces the common HERMES-TEAM distribution version `0.1.4`.
+`0.1.5` preserves the historical `0.1.0` through `0.1.4` bundles and enforces the common HERMES-TEAM distribution version `0.1.5`.
 
 ## Installation
 
@@ -434,14 +439,14 @@ See the [upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md) for th
 
 ## Validation
 
-The 0.1.4 release candidate passed these gates:
+The 0.1.5 release candidate targets the following gates. Counts are refreshed from the final pre-publication run.
 
 - HERMES-CONTROL unit suite: 19 passed
 - Official-upstream source-backed installer module: 2 passed
-- Linux clean materialize/doctor: 161/161 patched files verified
-- Focused HERMES-CONTROL runtime suite: 165 passed
+- Linux clean materialize/doctor: 164/164 patched files verified
+- Focused HERMES-CONTROL runtime suite: 175 passed
 - Timeline extension suite: 44 passed
-- Full materialized upstream regression: 1,844 files, 38,259 passed, 0 failed
+- Full materialized upstream regression: 1,844 files, 38,275 passed, 0 failed
 - macOS ARM Python 3.11/3.12/3.13 unit suites: 19 passed on each version
 - Linux setup dry-run: 7 role shells, empty Root MCP, Timeline/NeuralLink plan verified
 - Ruff, sdist/wheel build, wheel-install smoke, privacy, README-link, and `git diff --check` gates: passed
@@ -474,7 +479,7 @@ pytest -q
 - [AI operations manual](docs/AI_OPERATIONS_MANUAL.md): installation state machine, cards and receipts, shell and adapter extension, and release gate
 - [Architecture overview](docs/ARCHITECTURE_KO.md): component and execution-flow summary
 - [Upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md): baseline updates and fail-closed policy
-- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.4/include-paths.txt): extraction scope of the overlay bundle
+- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.5/include-paths.txt): extraction scope of the overlay bundle
 
 ## Out of scope
 

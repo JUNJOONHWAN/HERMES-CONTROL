@@ -24,7 +24,8 @@ HERMES-CONTROL은 작은 installer만 제공하는 프로젝트가 아닙니다.
 | 멀티보드 | 프로젝트별 독립 SQLite DB·workspace·log·attachment, dashboard board switcher, worker의 board 격리 |
 | 카드 실행 커널 | durable task, atomic claim, dependency promotion, idempotent create, crash/stale reclaim, circuit breaker, structured completion |
 | Root Controller | 도메인 MCP 없이 여섯 supervisor 도구로 상태·자동화·역할·위임·프로젝트/카드·adapter를 통제 |
-| Project/Card Controller | 프로젝트 생명주기, 독립 root-card thread, typed relation, 신규·후속·분할·검증·복구 카드를 웹·텔레그램 공통 경로에서 결정적으로 관리 |
+| Project/Card Controller | 별도 Project DB, `p_*`/`t_*` 이중 ID, `pa_*` 승인, 실행 중 stop/checkpoint 방향 전환, pause/reopen, typed relation, 신규·후속·분할·검증·복구를 웹·텔레그램 공통 경로에서 관리 |
+| 프로젝트 Git 관리 | existing/init-local/GitHub 저장소 등록, private/public 선택, 카드 branch checkpoint commit/push와 default-branch 직접 push 차단 |
 | 7개 Role Shell | `code`, `market`, `browser-research`, `operations`, `report`, `verification`, `tool-management` |
 | Adapter Control Plane | controller와 worker executor 분리, 다대다 Binding, capacity/health/capability gate, task/shell/all override |
 | 멀티툴·MCP 관리 | profile별 MCP·skill·plugin·toolset·callable tool inventory/search, 최소 배치, backup, probe, rollback |
@@ -64,13 +65,15 @@ ssh -L 9119:127.0.0.1:9119 user@remote-host
 - stale run, hallucinated task reference, receipt 문제를 보여주는 diagnostics
 - append-only task event를 tail하는 인증된 WebSocket live update
 - 여러 board의 생성·전환·archive와 board별 DB/workspace/log/attachment 완전 분리
-- 프로젝트 필터, 프로젝트 시작·종료·재개와 `New root card`·`Follow-up`·`Split`·`Verify`·`Recover` 동작
+- 프로젝트 필터, 프로젝트 시작·종료·재개와 `New root card`·`Follow-up`·`Change direction`·`Split`·`Verify`·`Recover` 동작
 
 ### Project/Card Controller
 
 프로젝트 관리는 worker adapter에 위임되지 않습니다. `supervisor_project`와 Kanban API가 같은 결정적 컨트롤러 서비스를 호출하고, 그 서비스만 프로젝트 상태와 카드 관계 그래프를 기록합니다. adapter는 컨트롤러가 만든 카드의 Role Shell 계약 안에서 실행할 뿐입니다.
 
-- Project는 `active → completed → active` 생명주기를 가지며, 열린 카드가 있으면 종료가 거절됩니다.
+- Project는 `active ↔ paused`와 `active → completed → active` 생명주기를 가지며, 실행 카드가 있으면 pause가, 열린 카드나 pending 승인이 있으면 종료가 거절됩니다.
+- 코드 카드 요청은 즉시 `t_*`를 만들지 않습니다. 먼저 `pa_*` 승인 요청만 저장하고 Project를 `paused`로 바꾸며, 다음 운영자 동작에서 승인해야 정확히 한 카드가 생성됩니다. 같은 제안은 중복 생성되지 않습니다.
+- 실행 중 범위·산출물·Role Shell·완료 조건이 크게 바뀌면 `Change direction`이 원본을 중지·archive하고 Git 작업공간을 checkpoint한 뒤 `pa_*` 후속 초안만 만듭니다. 운영자가 별도 승인하기 전에는 후속 `t_*`가 존재하거나 실행되지 않으며, 승인된 후속은 원본과 비차단 `references`로 연결됩니다.
 - 첫 카드는 자기 자신을 `root_task_id`로 갖고, 모든 후속·분할·검증·복구 카드는 같은 thread root를 상속합니다.
 - 관계는 `depends_on`, `follows`, `reviews`, `recovers`, `references`로 구분됩니다. 앞의 세 가지는 실행을 막는 dependency이고, 뒤의 두 가지는 실패 복구와 병렬 분할을 막지 않는 lineage입니다.
 - 각 카드에는 명시적 `acceptance_criteria`와 `input_refs`가 저장됩니다.
@@ -78,6 +81,8 @@ ssh -L 9119:127.0.0.1:9119 user@remote-host
 - 실패 복구는 원본 카드를 덮어쓰지 않습니다. `Recover`가 새 카드와 `recovers` 계보를 만들고, 복구 카드가 Receipt Gate를 통과하면 막힌 원본 실행을 감사 이력과 함께 archive합니다. Web과 Telegram 모두 복구 workspace를 명시적으로 바꿀 수도 있습니다.
 - 완료 카드는 다시 쓰지 않습니다. 수개월 뒤에도 카드 ID를 찾아 새 follow-up 또는 새 root card를 발행합니다.
 - 웹 UI와 Telegram/Supervisor는 별도 상태를 만들지 않고 같은 Project DB와 board DB를 사용합니다.
+- 프로젝트 Git은 `none`, `existing`, `init_local`, `github` mode를 지원합니다. 카드별 worktree branch만 commit/push할 수 있고 `main`, `master`, default branch 직접 push는 거부됩니다.
+- Telegram과 웹 UI는 항상 Project `p_*`와 Card `t_*`를 함께 표시합니다. 실제 claim이 발생하면 Telegram은 `🔄 작업중 · <제목>` 아래에 두 ID를 한 번 표시하고, 완료·중단·실패 알림도 같은 이중 ID를 유지합니다. 새 알림 구독은 현재 event cursor에서 시작해 과거 실패를 재전송하지 않습니다.
 
 카드는 `~/.hermes/kanban.db` 또는 named board의 `~/.hermes/kanban/boards/<slug>/kanban.db`에 남습니다. workspace는 목적에 따라 선택합니다.
 
@@ -178,7 +183,7 @@ HERMES-CONTROL은 세 경계를 분리합니다.
 
 | 항목 | 현재 계약 |
 |---|---|
-| HERMES-CONTROL | `0.1.4` (Alpha) |
+| HERMES-CONTROL | `0.1.5` (Alpha) |
 | Nous Hermes Agent | `0.18.0` |
 | 고정 upstream commit | `5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37` |
 | Python | `>=3.11,<3.14` |
@@ -189,7 +194,7 @@ HERMES-CONTROL은 세 경계를 분리합니다.
 
 지원되지 않는 upstream 버전에는 패치를 시도하지 않습니다. baseline commit, patch SHA-256, `git apply --check`, manifest의 모든 patched file SHA-256, 필수 경로와 import probe가 모두 맞아야 runtime이 활성화됩니다.
 
-`0.1.4`는 기존 `0.1.0`~`0.1.3` 번들을 보존하고, HERMES-TEAM과 공통 배포 버전 `0.1.4`를 강제합니다.
+`0.1.5`는 기존 `0.1.0`~`0.1.4` 번들을 보존하고, HERMES-TEAM과 공통 배포 버전 `0.1.5`를 강제합니다.
 
 ## 설치
 
@@ -266,7 +271,7 @@ supervisor_status      현재 서비스·worker·schedule·artifact 상태
 supervisor_automation  cron/job 실패와 복구 흐름
 supervisor_roles       활성 shell과 route 가능성
 supervisor_delegate    shell 계약을 가진 카드 생성·위임
-supervisor_project     프로젝트·독립 root·후속·분할·검증·복구·종료 관리
+supervisor_project     프로젝트·독립 root·후속·방향 전환·분할·검증·복구·종료 관리
 supervisor_adapter     controller/executor/binding/override/tool catalog 관리
 ```
 
@@ -434,14 +439,14 @@ Heartbeat의 공개 출력은 정확히 세 층입니다.
 
 ## 검증
 
-0.1.4 배포 후보는 다음 게이트를 통과했습니다.
+0.1.5 배포 후보는 다음 게이트를 대상으로 검증합니다. 아래 수치는 공개 전 최종 실행 결과로 갱신합니다.
 
 - HERMES-CONTROL unit: 19 passed
 - 공식 upstream source-backed installer: 2 passed
-- Linux clean materialize/doctor: 패치 파일 161/161 검증
-- HERMES-CONTROL focused runtime: 165 passed
+- Linux clean materialize/doctor: 패치 파일 164/164 검증
+- HERMES-CONTROL focused runtime: 175 passed
 - Timeline extension: 44 passed
-- 전체 materialized upstream regression: 1,844 files, 38,259 passed, 0 failed
+- 전체 materialized upstream regression: 1,844 files, 38,275 passed, 0 failed
 - macOS ARM Python 3.11/3.12/3.13 unit: 각 19 passed
 - Linux setup dry-run: 7 role shells, 빈 Root MCP, Timeline/NeuralLink 계획 검증
 - Ruff, sdist/wheel build, wheel install smoke, privacy scan, README link, `git diff --check`: passed
@@ -474,7 +479,7 @@ pytest -q
 - [AI 운영 매뉴얼](docs/AI_OPERATIONS_MANUAL.md): 설치 상태 머신, 카드/receipt, 셸·adapter 추가, release gate
 - [구조 설명](docs/ARCHITECTURE_KO.md): 구성요소와 실행 흐름 요약
 - [Upstream 호환 계약](docs/UPSTREAM_COMPATIBILITY.md): baseline 갱신과 fail-closed 정책
-- [현재 패치 포함 경로](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.4/include-paths.txt): overlay bundle의 추출 범위
+- [현재 패치 포함 경로](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.5/include-paths.txt): overlay bundle의 추출 범위
 
 ## 범위 밖
 
