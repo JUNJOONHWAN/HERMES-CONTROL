@@ -23,7 +23,8 @@ HERMES-CONTROL is not just a small installer. The installer reproduces the follo
 | Kanban web UI | Drag-and-drop cards, eight status columns, task drawer, comments, dependencies, run history, attachments, diagnostics, and live WebSocket updates |
 | Multiple boards | Isolated SQLite DB, workspace, logs, and attachments per project; dashboard board switcher; board-pinned workers |
 | Card execution kernel | Durable tasks, atomic claims, dependency promotion, idempotent creation, crash/stale reclaim, circuit breaker, and structured completion |
-| Root Controller | Controls status, automation, roles, delegation, and adapters through five supervisor tools with no domain MCP attached |
+| Root Controller | Controls status, automation, roles, delegation, projects/cards, and adapters through six supervisor tools with no domain MCP attached |
+| Project/Card Controller | Deterministic project lifecycle, independent root-card threads, typed relations, and new/follow-up/split/verify/recover actions shared by web and Telegram |
 | Seven Role Shells | `code`, `market`, `browser-research`, `operations`, `report`, `verification`, and `tool-management` |
 | Adapter Control Plane | Separate controller and worker axes, many-to-many Bindings, capacity/health/capability gates, and task/shell/all overrides |
 | Multitool and MCP management | Per-profile MCP, skill, plugin, toolset, and callable-tool inventory/search; minimal assignment, backup, probes, and rollback |
@@ -63,6 +64,20 @@ The web board provides:
 - diagnostics for stale runs, hallucinated task references, and receipt problems;
 - authenticated WebSocket updates from the append-only task event stream;
 - board creation, switching, and archival with isolated DB, workspace, logs, and attachments per board.
+- project filtering, project start/close/reopen, and `New root card`, `Follow-up`, `Split`, `Verify`, and `Recover` actions.
+
+### Project/Card Controller
+
+Project management is not delegated to a worker adapter. `supervisor_project` and the Kanban API call the same deterministic controller service, and only that service commits project state and the card relation graph. Adapters execute the resulting cards under their Role Shell contracts.
+
+- A Project follows `active → completed → active`; closing is rejected while any card remains open.
+- The first card points `root_task_id` to itself. Follow-ups, splits, reviews, and recoveries inherit the same thread root.
+- Relations are typed as `depends_on`, `follows`, `reviews`, `recovers`, or `references`. The first three gate execution; the last two preserve recovery/parallel lineage without blocking work.
+- Every card stores explicit `acceptance_criteria` and `input_refs`.
+- The controller classifies the workspace before a card becomes dispatchable: no Project path uses `scratch`, a normal folder uses a durable `dir` for every role, and a `code` card backed by a Git repository uses an isolated `worktree`. An explicit worktree without a Git anchor is rejected before dispatch.
+- Recovery never rewrites the failed card. `Recover` creates a new card with `recovers` lineage; once that card passes the Receipt Gate, the blocked source attempt is archived with its audit history intact. Both Web and Telegram may explicitly override the recovery workspace.
+- Completed cards are immutable. Months later, the operator can locate the card ID and issue a linked follow-up or create a new root card.
+- The web UI and Telegram/Supervisor do not maintain separate state; both use the same Project DB and board DB.
 
 Cards are stored in `~/.hermes/kanban.db` or, for a named board, `~/.hermes/kanban/boards/<slug>/kanban.db`. Each task chooses a workspace policy.
 
@@ -123,7 +138,7 @@ The differentiator is not an unverified benchmark claim. It is the ability to re
 Chat / CLI / Cron / Kanban Web UI
                  │
                  ▼
-   Root Controller (5 control tools, zero domain MCP)
+   Root Controller (6 control tools, zero domain MCP)
                  │ create/delegate/inspect/switch
                  ▼
       Kanban DB + Event Stream ◄────► Dashboard API / WebSocket
@@ -163,7 +178,7 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 | Item | Current contract |
 |---|---|
-| HERMES-CONTROL | `0.1.3` (Alpha) |
+| HERMES-CONTROL | `0.1.4` (Alpha) |
 | Nous Hermes Agent | `0.18.0` |
 | Pinned upstream commit | `5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37` |
 | Python | `>=3.11,<3.14` |
@@ -172,9 +187,9 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 | Optional controllers | Grok, OpenRouter Gemma, local OpenAI-compatible/vLLM |
 | Optional workers | Codex CLI, generic command adapter, additional OpenCode adapters |
 
-The installer refuses to patch an unsupported upstream version. Activation requires the exact baseline commit, patch SHA-256, a successful `git apply --check`, post-patch SHA-256 verification for 151 files, required paths, and runtime import probes.
+The installer refuses to patch an unsupported upstream version. Activation requires the exact baseline commit, patch SHA-256, a successful `git apply --check`, SHA-256 verification of every file declared by the manifest, required paths, and runtime import probes.
 
-`0.1.3` preserves the historical `0.1.0` through `0.1.2` bundles and enforces the common HERMES-TEAM distribution version `0.1.3`.
+`0.1.4` preserves the historical `0.1.0` through `0.1.3` bundles and enforces the common HERMES-TEAM distribution version `0.1.4`.
 
 ## Installation
 
@@ -244,13 +259,14 @@ Commands return JSON so that human operators, AI maintainers, and automation rea
 
 ## Root Controller and seven Role Shells
 
-Root Hermes is not a general-purpose worker. Its MCP catalog is empty, and it operates through five control tools.
+Root Hermes is not a general-purpose worker. Its MCP catalog is empty, and it operates through six control tools.
 
 ```text
 supervisor_status      service, worker, schedule, and artifact state
 supervisor_automation  cron/job failures and recovery flows
 supervisor_roles       active shells and route availability
 supervisor_delegate    card creation and delegation under a shell contract
+supervisor_project     project/card lifecycle, independent roots, follow-up, split, verify, and recover
 supervisor_adapter     controller/executor/binding/override/tool-catalog control
 ```
 
@@ -418,6 +434,20 @@ See the [upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md) for th
 
 ## Validation
 
+The 0.1.4 release candidate passed these gates:
+
+- HERMES-CONTROL unit suite: 19 passed
+- Official-upstream source-backed installer module: 2 passed
+- Linux clean materialize/doctor: 161/161 patched files verified
+- Focused HERMES-CONTROL runtime suite: 165 passed
+- Timeline extension suite: 44 passed
+- Full materialized upstream regression: 1,844 files, 38,259 passed, 0 failed
+- macOS ARM Python 3.11/3.12/3.13 unit suites: 19 passed on each version
+- Linux setup dry-run: 7 role shells, empty Root MCP, Timeline/NeuralLink plan verified
+- Ruff, sdist/wheel build, wheel-install smoke, privacy, README-link, and `git diff --check` gates: passed
+
+### Historical 0.1.0 validation record
+
 The 0.1.0 public release passed these gates before publication:
 
 - HERMES-CONTROL unit suite: 19 passed
@@ -444,7 +474,7 @@ pytest -q
 - [AI operations manual](docs/AI_OPERATIONS_MANUAL.md): installation state machine, cards and receipts, shell and adapter extension, and release gate
 - [Architecture overview](docs/ARCHITECTURE_KO.md): component and execution-flow summary
 - [Upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md): baseline updates and fail-closed policy
-- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.3/include-paths.txt): extraction scope of the overlay bundle
+- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.4/include-paths.txt): extraction scope of the overlay bundle
 
 ## Out of scope
 

@@ -17,18 +17,18 @@ Each supported upstream line owns these immutable artifacts:
 
 1. Fetch the new official upstream commit without changing a live checkout.
 2. Create a temporary worktree from that commit.
-3. Port HERMES-CONTROL changes by subsystem: contract, card/receipt storage, root enforcement, adapters, gateway delivery, heartbeat/artifacts, Timeline, NeuralLink, dashboard.
+3. Port HERMES-CONTROL changes by subsystem: contract, Project/Card Controller and typed-link storage, card/receipt storage, root enforcement, adapters, gateway delivery, heartbeat/artifacts, Timeline, NeuralLink, dashboard.
 4. Generate a new patch bundle. Do not modify or delete an old bundle.
 5. Materialize the patch into a second clean checkout with `hermes-control install --no-deps --source <audited-repo>`.
 6. Run `hermes-control doctor` and compare every listed file checksum.
 7. Install dependencies in a clean venv and run import probes.
 8. Run focused HERMES-CONTROL tests, Timeline tests, upstream full regression, privacy scan, Linux matrix, and macOS matrix.
-9. Run public setup against a temporary Hermes home. Confirm 7 role shells, bindings, Timeline MCP, NeuralLink plugin, OpenCode adapter/controller, and three heartbeat layers.
+9. Run public setup against a temporary Hermes home. Confirm 7 role shells, bindings, six root control tools including `supervisor_project`, Project/Card web API, Timeline MCP, NeuralLink plugin, OpenCode adapter/controller, and three heartbeat layers.
 10. Record the new compatibility manifest only after all gates are green.
 
 ## Why a core patch still exists
 
-Timeline and NeuralLink are independently packageable, and adapters can be registered externally. The current upstream plugin API cannot atomically enforce all HERMES-CONTROL guarantees: card receipt validation at storage time, root tool-schema hiding, conversation-loop failback, and gateway delivery from validated receipts. Those guarantees remain a small version-gated core patch until upstream exposes equivalent enforcement hooks.
+Timeline and NeuralLink are independently packageable, and adapters can be registered externally. The current upstream plugin API cannot atomically enforce all HERMES-CONTROL guarantees: Project/Card lifecycle and typed relation semantics shared across chat and dashboard, card receipt validation at storage time, root tool-schema hiding, conversation-loop failback, and gateway delivery from validated receipts. Those guarantees remain a small version-gated core patch until upstream exposes equivalent enforcement hooks.
 
 ## Failure behavior
 

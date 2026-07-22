@@ -30,6 +30,32 @@ A card is the authoritative work unit. It contains objective, role, dependencies
 
 The gateway sends results from validated receipt state. It does not treat an unverified worker message as final delivery evidence.
 
+Project and card graph changes are controller operations, not adapter work. Use the same native service through `supervisor_project` (chat, Telegram, CLI root) or the Kanban Project/Card API (web UI):
+
+- `start_project`: create Project metadata and its first self-rooted card;
+- `add_project_card`: create a new independent root-card thread in an existing active Project;
+- `continue_card`: create a `follows` card in the same root thread;
+- `split_card`: create parallel `references` cards without waiting on the container card;
+- `verify_card`: create a `reviews` card gated on source completion;
+- `recover_card`: create a non-blocking `recovers` card and recovery-source provenance;
+- `close_project` / `reopen_project`: transition project state; close refuses open cards;
+- `list_projects`: return every visible Project with status, path, card/thread counts, and status counts;
+- `inspect_card`, `inspect_project`, and `locate_card`: reconstruct old work without rewriting completed cards.
+
+Natural-language surfaces should map requests such as "show project list" or "프로젝트 목록 보여줘" to `list_projects`; they must not synthesize a list from conversation memory. Web project filters and Telegram therefore render the same controller payload.
+
+Typed link semantics are part of the storage contract. `depends_on`, `follows`, and `reviews` are blocking. `recovers` and `references` are lineage only. Never emulate these operations by asking an adapter to issue raw SQL or by editing a completed card.
+
+Workspace selection is also a controller invariant, not an adapter guess:
+
+- no Project `primary_path`: controller-managed `scratch`;
+- a non-Git Project path: durable `dir` for code, browser, research, operations, and verification cards;
+- a Git-backed Project path plus the `code` shell: one linked `worktree` per card;
+- an explicit `worktree` request: validate an absolute Git anchor before creating the card;
+- an explicit recovery override: pass `workspace_kind` and `workspace_path` through either `supervisor_project` or the Web recovery endpoint.
+
+If workspace resolution fails after an older card was created, leave that failed card blocked and issue `recover_card`. The recovery is immediately runnable because `recovers` is non-blocking. Successful receipt commit archives the blocked source attempt but preserves its runs, errors, comments, provenance, and lineage. Do not initialize Git, move the Project, or mutate the failed card merely to make dispatch succeed unless the operator separately authorizes that repository change.
+
 ## 5. Timeline Code Map and NeuralLink
 
 Timeline Code Map stores append-only context, code slices, actions, outputs and relations. A meaningful code task follows `load context -> query slice -> act -> record/link -> query again -> verify`.
@@ -80,6 +106,8 @@ hermes-control --root /tmp/control-runtime setup --hermes-home /tmp/control-stat
 7. Roll back the binding if health or receipt validation fails.
 
 Secrets belong in operator state or environment variables, never in the descriptor committed here.
+
+An adapter may execute a Project card or propose a follow-up. It must not directly commit Project status, `root_task_id`, or typed card relations; those writes return through the native controller.
 
 ## 9. Adding a shell
 
