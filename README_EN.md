@@ -130,6 +130,8 @@ A standard Hermes profile groups prompts, tools, and skills. HERMES-CONTROL adds
 - **Root Hermes is the control plane.** It turns objectives into cards, selects a role shell and adapter, validates receipts, and delivers validated results.
 - **A role shell is a durable policy boundary.** It declares allowed task classes, tool/MCP scope, concurrency, completion criteria, and escalation behavior.
 - **An adapter is a replaceable execution edge.** OpenCode is the default worker path, while Codex CLI, Grok, and generic command adapters can use the same contract.
+- **Free worker routing is automatic only for ordinary roles.** OpenRouter strict-free and OpenCode free refresh the live catalog before execution, skip removed, exhausted, or no-longer-free candidates, and incorporate newly eligible free models.
+- **Hermes repair has a separate quality boundary.** The eighth `hermes-repair` Role Shell defaults to `gpt-5.6-sol/high`; another execution adapter can replace it only after a separate `hermes-repair-v1` performance and safety evaluation plus explicit operator approval.
 - **Cards and receipts define completion.** A worker saying “done” is insufficient; structured evidence and artifacts must be validated in the same storage transaction as the status change.
 - **Timeline Code Map is the shared evidence graph.** It stores context, code slices, actions, decisions, outputs, and their relations as append-only evidence.
 - **NeuralLink recalls bounded historical context.** It injects Timeline candidates before an LLM call without claiming perfect semantic retrieval.
@@ -149,12 +151,16 @@ Chat / CLI / Cron / Kanban Web UI
       Kanban DB + Event Stream ◄────► Dashboard API / WebSocket
                  │ atomic claim
                  ▼
- Immutable Role Shell ──► Binding / Override ──► Eligible Executor
+ Immutable Role Shell ──► Binding / Override ──► Eligible Executor Adapter
         │                         │                       │
         │ policy                  │ provenance            ├─ Hermes profile
-        │                         │                       ├─ OpenCode
+        │                         │                       ├─ OpenCode Free
+        │                         │                       ├─ OpenRouter strict-free
         │                         │                       ├─ Codex CLI
         │                         │                       └─ generic command
+        │
+        └─ hermes-repair ──► hermes-repair-v1 gate ──► Maintainer
+                                                     default: gpt-5.6-sol/high
         │                         ▼
         │               capability ∩ health ∩ capacity
         │
@@ -183,18 +189,18 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 | Item | Current contract |
 |---|---|
-| HERMES-CONTROL | `0.1.7` (Alpha) |
+| HERMES-CONTROL | `0.1.8` (Alpha) |
 | Nous Hermes Agent | `0.18.0` |
 | Pinned upstream commit | `5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37` |
 | Python | `>=3.11,<3.14` |
 | OS | Linux and macOS |
 | Default path | OpenCode free-model controller/worker after health gates pass |
-| Optional controllers | Grok, OpenRouter Gemma, local OpenAI-compatible/vLLM |
-| Optional workers | Codex CLI, generic command adapter, additional OpenCode adapters |
+| Optional controllers | OpenRouter strict-free, Grok, OpenRouter Gemma, local OpenAI-compatible/vLLM |
+| Optional workers | OpenRouter strict-free, OpenCode free, Codex CLI, generic command adapters |
 
 The installer refuses to patch an unsupported upstream version. Activation requires the exact baseline commit, patch SHA-256, a successful `git apply --check`, SHA-256 verification of every file declared by the manifest, required paths, and runtime import probes.
 
-`0.1.7` preserves the historical `0.1.0` through `0.1.6` bundles and enforces the common HERMES-TEAM distribution version `0.1.7`. Ordinary project coding and repair remain on `code`/`operations` with lower-cost executors; only Hermes controller, adapter, Role Shell, router, and supervisor-configuration maintenance uses the new `hermes-repair` lane pinned to `gpt-5.6-sol/high`. The strict-free OpenRouter controller uses capability filtering and strongest-first ordered fallback instead of the random free router.
+`0.1.8` preserves the historical `0.1.0` through `0.1.7` bundles and enforces the common HERMES-TEAM distribution version `0.1.8`. OpenRouter strict-free and OpenCode free are low-priority worker candidates for all seven ordinary Role Shells as well as controller choices. Every task refreshes the live catalog, enforces free/tool eligibility, and constructs a strongest-first fallback chain. Ordinary project coding and repair remain on `code`/`operations` with lower-cost executors. Only Hermes controller, adapter, Role Shell, router, and supervisor-configuration maintenance uses `hermes-repair`, whose default is `gpt-5.6-sol/high`. A replacement must pass a separate `hermes-repair-v1` evaluation with 20 or more cases, 95% overall and 100% critical passes, at least 95% of baseline score, median latency no worse than 1.5x baseline, zero default-branch writes, zero Timeline invalid nodes, a SHA-256 evaluation artifact, and explicit operator approval.
 
 ## Installation
 
@@ -286,7 +292,7 @@ Domain work must pass through one of eight immutable, versioned Role Shells.
 | `report` | Report assembly from upstream receipts | file, kanban, Timeline | Intermediate artifacts cannot become completion |
 | `verification` | Independent regression and final gates | file, terminal, kanban, Timeline | Separates baseline failures from new regressions |
 | `tool-management` | MCP, skill, plugin, and toolset lifecycle | file, terminal, skills, kanban, Timeline | Minimal assignment with backup, probes, and rollback |
-| `hermes-repair` | Hermes control-plane, adapter, shell, router, and configuration maintenance | file, terminal, kanban, Timeline | No ordinary project coding; pinned `gpt-5.6-sol/high` with replacement certification |
+| `hermes-repair` | Hermes control-plane, adapter, shell, router, and configuration maintenance | file, terminal, kanban, Timeline | No ordinary project coding; default `gpt-5.6-sol/high`, certified replacements only |
 
 SQLite triggers reject updates and deletes of Role Shell rows. Policy changes require a new version and contract hash under the same `shell_key`, preserving the exact contract used by historical cards.
 
@@ -301,12 +307,16 @@ A Role Shell defines what may be done and what must be proven. An Executor defin
 | `hermes-worker-browser` | browser research | 2 | Timeline; browser MCPs are added per role |
 | `hermes-worker-universal` | low-priority provider-neutral fallback | 4 | Timeline |
 | `hermes-worker-multitool` | MCP/skill/plugin/toolset management | 1 | Timeline |
+| `hermes-worker-opencode-free` | Dynamic free candidate for seven ordinary roles | 2 | Tools permitted by the Role Shell |
+| `hermes-worker-openrouter-free` | Strict-free candidate for seven ordinary roles | 2 | Tools permitted by the Role Shell |
+| `hermes-worker-hermes-maintainer` | Hermes self-maintenance only | 1 | file, terminal, kanban, Timeline |
 
 Controller adapters and worker executors are separate axes.
 
 | Integration | Supported position | Activation gate |
 |---|---|---|
-| OpenCode | Default controller/worker path | Free-model catalog and tool-call health gate |
+| OpenCode free | Default controller plus ordinary worker candidate | Per-task live free catalog and tool-call health gate |
+| OpenRouter strict-free | Optional controller plus ordinary worker candidate | Zero-price, tool, and context filters with ordered `models` fallback |
 | Codex CLI | Optional command worker | Existing Codex authentication plus binary/version probe |
 | Grok | Optional controller candidate | `XAI_API_KEY` plus catalog/tool-call probe |
 | OpenRouter Gemma | Disabled controller candidate | Operator configuration and health gate; not a default |
@@ -332,6 +342,21 @@ To add a command adapter:
 4. Create Bindings to one or more Role Shells with capacity and capability caps.
 5. Validate end to end with a card that requires a real artifact and Receipt.
 6. Promote through `once → temporary → permanent`, retaining audit events at every step.
+
+A candidate for `hermes-repair` needs more than this normal adapter flow. Its
+launch configuration must carry a `hermes-repair-v1` artifact, performance and
+safety metrics for that exact executor, and explicit operator approval. Free
+worker adapters are never bound to this shell automatically.
+
+Natural-language examples:
+
+```text
+Run only card t_12345678 with the OpenRouter free execution adapter.
+Switch the code role to the OpenCode free execution adapter for one hour.
+Show the current live model order and health for the free execution adapters.
+Evaluate maintainer candidate X with hermes-repair-v1, but do not assign it yet.
+If its artifact and approval are valid, permanently assign candidate X to Hermes repair.
+```
 
 Pagent and qagent are not architectural dependencies. They can be attached as optional command adapters if desired.
 
@@ -440,7 +465,7 @@ See the [upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md) for th
 
 ## Validation
 
-The following numbers are the existing 0.1.5 validation record. Version 0.1.7 is validated separately through its new immutable bundle and current GitHub Actions run.
+The following numbers are the existing 0.1.5 validation record. Version 0.1.8 is validated separately through its new immutable bundle and current GitHub Actions run.
 
 - HERMES-CONTROL unit suite: 19 passed
 - Official-upstream source-backed installer module: 2 passed
@@ -480,7 +505,7 @@ pytest -q
 - [AI operations manual](docs/AI_OPERATIONS_MANUAL.md): installation state machine, cards and receipts, shell and adapter extension, and release gate
 - [Architecture overview](docs/ARCHITECTURE_KO.md): component and execution-flow summary
 - [Upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md): baseline updates and fail-closed policy
-- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.7/include-paths.txt): extraction scope of the overlay bundle
+- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.8/include-paths.txt): extraction scope of the overlay bundle
 
 ## Out of scope
 

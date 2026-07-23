@@ -22,7 +22,21 @@ The root Hermes process is a governance plane. It accepts the user objective, cr
 
 A role shell is a durable policy contract. It defines allowed task classes, preferred executor adapter, MCP/tool catalog, capacity, receipt requirements and escalation behavior. A binding connects a shell to an adapter. An override changes that relation once, temporarily or permanently while preserving an audit record.
 
-Adapters are replaceable execution edges. OpenCode is the default because its free model catalog can be used without making OpenRouter mandatory. Codex CLI, Grok, and generic command adapters remain supported when the operator registers credentials and health checks. Pagent and qagent are not architectural dependencies; they are examples of optional adapters that can be attached through the same interface.
+Adapters are replaceable execution edges. The seven ordinary Role Shells may use
+OpenCode free or OpenRouter strict-free command executors. Those routers refresh
+their live catalog before each task, reject non-free or ineligible models, and
+construct a strongest-first fallback chain without changing the Role Shell tool
+contract. Codex CLI, Grok, and generic command adapters remain supported when the
+operator registers credentials and health checks. Pagent and qagent are not
+architectural dependencies; they are examples of optional adapters that can be
+attached through the same interface.
+
+`hermes-repair` is a separate eighth Role Shell for Hermes controller, adapter,
+shell, router, and supervisor maintenance. Its default executor is
+`gpt-5.6-sol/high`. An alternative is allowed, but only after the exact executor
+passes the versioned `hermes-repair-v1` performance and safety gate and an
+operator explicitly approves it. Ordinary code repair must not be escalated to
+this shell merely because the work is described as a repair.
 
 ## 4. Card and receipt contract
 
@@ -141,6 +155,24 @@ hermes-control --root /tmp/control-runtime setup --hermes-home /tmp/control-stat
 6. Promote `once -> temporary -> permanent` only with receipt evidence.
 7. Roll back the binding if health or receipt validation fails.
 
+Do not bind a general free adapter to `hermes-repair` as part of normal adapter
+registration. A maintainer replacement additionally requires 20 or more
+`hermes-repair-v1` cases, at least 95% overall and 100% critical passes, at least
+95% of the baseline score, median latency at or below 1.5 times baseline, zero
+default-branch writes, zero Timeline invalid nodes, source/config/conflict and
+branch push/rollback cases, a valid SHA-256 evaluation artifact for the exact
+executor, and explicit operator approval. Missing evidence fails closed.
+
+Operational examples:
+
+```text
+Run only card t_12345678 with the OpenRouter free execution adapter.
+Switch the code role to the OpenCode free execution adapter for one hour.
+Show the current live model order and health for the free execution adapters.
+Evaluate maintainer candidate X with hermes-repair-v1, but do not assign it yet.
+If its artifact and approval are valid, permanently assign candidate X to Hermes repair.
+```
+
 Secrets belong in operator state or environment variables, never in the descriptor committed here.
 
 An adapter may execute a Project card or propose a follow-up. It must not directly commit Project status, `root_task_id`, or typed card relations; those writes return through the native controller.
@@ -161,4 +193,16 @@ The public edition includes only the schema and tooling frame. A private know-ho
 
 ## 11. Release gate
 
-Do not report a release complete unless bundle hashes, fresh materialization, doctor, setup dry-run, focused tests, Timeline tests, full upstream regression, privacy scan, macOS/Linux validation and rollback all pass. Project approval tests must prove that proposing code creates no `t_*`, approval creates one, pause blocks writes, a direction change archives/checkpoints the source and creates no successor before separate approval, the approved successor uses non-blocking lineage, direct default-branch push is denied, a `claimed` event sends exactly one working notification with both IDs, and notification subscriptions do not replay old events. If any one is missing, name the missing gate.
+Do not report a release complete unless bundle hashes, fresh materialization,
+doctor, setup dry-run, focused tests, Timeline tests, full upstream regression,
+privacy scan, macOS/Linux validation and rollback all pass. A release that changes
+free routing or `hermes-repair` must also prove per-task catalog refresh, strict
+free-only fallback, no automatic free binding to `hermes-repair`, baseline
+maintainer acceptance, and fail-closed rejection of incomplete replacement
+certification. Project approval tests must prove that proposing code creates no
+`t_*`, approval creates one, pause blocks writes, a direction change
+archives/checkpoints the source and creates no successor before separate approval,
+the approved successor uses non-blocking lineage, direct default-branch push is
+denied, a `claimed` event sends exactly one working notification with both IDs,
+and notification subscriptions do not replay old events. If any one is missing,
+name the missing gate.
