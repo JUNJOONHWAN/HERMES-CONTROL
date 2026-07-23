@@ -3,7 +3,7 @@
 **English** | [한국어](README_KO.md)
 
 [![Compatibility](https://github.com/JUNJOONHWAN/HERMES-CONTROL/actions/workflows/compatibility.yml/badge.svg)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/actions/workflows/compatibility.yml)
-[![Release v0.1.10 Alpha](https://img.shields.io/badge/release-v0.1.10_alpha-f59e0b.svg)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/releases/tag/v0.1.10)
+[![Release v0.1.11 Alpha](https://img.shields.io/badge/release-v0.1.11_alpha-f59e0b.svg)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/releases/tag/v0.1.11)
 [![Python 3.11–3.13](https://img.shields.io/badge/python-3.11--3.13-3776AB.svg)](https://www.python.org/)
 [![Hermes Agent 0.18.0](https://img.shields.io/badge/Hermes_Agent-0.18.0-6f42c1.svg)](https://github.com/NousResearch/hermes-agent)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -15,7 +15,7 @@ HERMES-CONTROL is an independent distribution that adds role shells, card contra
 > [!IMPORTANT]
 > HERMES-CONTROL is not an official Nous Research project. It does not redistribute a full fork of Hermes Agent. The installer fetches one verified upstream commit and applies a cryptographically pinned compatibility patch.
 
-**Current public release:** [HERMES-CONTROL v0.1.10 (Alpha)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/releases/tag/v0.1.10), built for Nous Hermes Agent `0.18.0`.
+**Current public release:** [HERMES-CONTROL v0.1.11 (Alpha)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/releases/tag/v0.1.11), built for Nous Hermes Agent `0.18.0`.
 
 ## What HERMES-CONTROL is
 
@@ -69,7 +69,7 @@ The Root Controller coordinates work but does not perform domain work itself. Th
 
 ## Recommended operating surfaces: Telegram and CLI
 
-Version `0.1.10` is documented and released as **Telegram/CLI-first**. Telegram is the conversational operator surface; the CLI is the exact inspection, installation, and recovery surface.
+Version `0.1.11` is documented and released as **Telegram/CLI-first**. Telegram is the conversational operator surface; the CLI is the exact inspection, installation, and recovery surface.
 
 Example Telegram requests:
 
@@ -93,9 +93,11 @@ hermes-control run -- kanban watch
 ```
 
 > [!CAUTION]
-> The Kanban Web UI is included as a supplementary control surface. The `v0.1.10` release gate did **not** claim a comprehensive browser/device matrix covering every button, drag-and-drop path, WebSocket recovery path, and mobile layout. Use Telegram and CLI as the recommended operating surfaces until that acceptance matrix is completed.
+> The Kanban Web UI is included as a supplementary control surface. The `v0.1.11` release gate did **not** claim a comprehensive browser/device matrix covering every button, drag-and-drop path, WebSocket recovery path, and mobile layout. Use Telegram and CLI as the recommended operating surfaces until that acceptance matrix is completed.
 
 Other explicit limits: free-model availability and quality can change at any time; NeuralLink recall can miss semantically related history; a valid Receipt proves recorded contract checks, not that an AI judgment is universally correct; and the public distribution does not include private credentials, operator state, or private know-how databases.
+
+The Timeline Code Map server is leased from the operator MCP catalog in `0.1.11`; it is not silently copied from a retired Hermes source tree. `doctor` reports this as an explicit external-catalog warning while still verifying the controller integration bundled in the managed Hermes runtime.
 
 ## What is actually included
 
@@ -106,7 +108,7 @@ HERMES-CONTROL is not just a small installer. The installer reproduces the follo
 | Kanban web UI | Drag-and-drop cards, eight status columns, task drawer, comments, dependencies, run history, attachments, diagnostics, and live WebSocket updates |
 | Multiple boards | Isolated SQLite DB, workspace, logs, and attachments per project; dashboard board switcher; board-pinned workers |
 | Card execution kernel | Durable tasks with default acceptance criteria/input lineage, atomic claims, dependency promotion, idempotent creation, same-card terminal-contract recovery, circuit breaker, and structured completion |
-| Root Controller | Controls status, automation, roles, delegation, projects/cards, and adapters through six supervisor tools with no domain MCP attached |
+| Root Controller | Uses the same fixed six-tool Supervisor surface for every controller-capable model/provider; explanatory questions require no tool, while live reads and mutations remain fail-closed |
 | Project/Card Controller | Separate Project DB, dual `p_*`/`t_*` identity, `pa_*` approval, stop/checkpoint direction changes, pause/reopen, typed relations, and shared web/Telegram actions |
 | Project Git management | Existing/init-local/GitHub repository setup, private/public selection, card-branch checkpoint commit/push, and default-branch push denial |
 | Eight Role Shells | `code`, `market`, `browser-research`, `operations`, `report`, `verification`, `tool-management`, and `hermes-repair` |
@@ -120,7 +122,7 @@ The distribution retains the standard Hermes profile, gateway, Kanban, and dashb
 
 ## Kanban state machine and supplementary web UI
 
-The Kanban ledger is not an optional visualization: it is the authoritative task state machine shared by people, AI workers, CLI automation, cron, and the dashboard. The browser UI is one supplementary view and control surface over that state; Telegram and CLI remain the recommended operator paths for `v0.1.10`.
+The Kanban ledger is not an optional visualization: it is the authoritative task state machine shared by people, AI workers, CLI automation, cron, and the dashboard. The browser UI is one supplementary view and control surface over that state; Telegram and CLI remain the recommended operator paths for `v0.1.11`.
 
 ```bash
 # The gateway hosts the embedded dispatcher on a 15-second interval
@@ -272,7 +274,7 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 | Item | Current contract |
 |---|---|
-| HERMES-CONTROL | `0.1.10` (Alpha) |
+| HERMES-CONTROL | `0.1.11` (Alpha) |
 | Nous Hermes Agent | `0.18.0` |
 | Pinned upstream commit | `5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37` |
 | Python | `>=3.11,<3.14` |
@@ -283,7 +285,7 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 The installer refuses to patch an unsupported upstream version. Activation requires the exact baseline commit, patch SHA-256, a successful `git apply --check`, SHA-256 verification of every file declared by the manifest, required paths, and runtime import probes.
 
-`0.1.10` preserves the historical `0.1.0` through `0.1.9` bundles and packages the audited DGX LIVE release as a new immutable overlay. It adds mandatory card acceptance/input contracts, explicit Verification verdicts with same-thread rework and least-cost reasoning escalation, card-scoped Multitool leases with simple/advanced/deep service classes, and same-card fail-closed handling when a worker exits without a receipt. Installation still fetches only the official Nous `0.18.0` baseline and never requires access to a personal checkout or a retired repository.
+`0.1.11` preserves the historical `0.1.0` through `0.1.10` bundles and packages the audited DGX LIVE release as a new immutable overlay. It adds provider-independent controller mode for every controller-capable executor, injects one fixed six-tool Supervisor surface, stops ordinary explanatory questions from forcing control calls, and replaces the HY3-specific path with `executor_opencode` plus a Codex fallback. Installation still fetches only the official Nous `0.18.0` baseline and never requires access to a personal checkout or a retired repository.
 
 ## Installation
 
@@ -548,7 +550,7 @@ See the [upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md) for th
 
 ## Validation
 
-The following numbers are the existing 0.1.5 validation record. Version 0.1.10 is validated separately through its new immutable bundle and current GitHub Actions run.
+The following numbers are the existing 0.1.5 validation record. Version 0.1.11 is validated separately through its new immutable bundle and current GitHub Actions run.
 
 - HERMES-CONTROL unit suite: 19 passed
 - Official-upstream source-backed installer module: 2 passed
@@ -588,7 +590,7 @@ pytest -q
 - [AI operations manual](docs/AI_OPERATIONS_MANUAL.md): installation state machine, cards and receipts, shell and adapter extension, and release gate
 - [Architecture overview](docs/ARCHITECTURE_KO.md): component and execution-flow summary
 - [Upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md): baseline updates and fail-closed policy
-- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.10/include-paths.txt): extraction scope of the overlay bundle
+- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.11/include-paths.txt): extraction scope of the overlay bundle
 
 ## Out of scope
 

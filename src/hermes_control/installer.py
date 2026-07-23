@@ -145,25 +145,42 @@ def install(
         moved = True
         source_tree = final_release / "source"
         venv_dir = final_release / "venv"
+        timeline_extension = "not_installed"
         if install_dependencies:
             _run([sys.executable, "-m", "venv", str(venv_dir)])
             python = _venv_python(venv_dir)
             _run([str(python), "-m", "pip", "install", "-e", str(source_tree)])
-            _run(
-                [
-                    str(python),
-                    "-m",
-                    "pip",
-                    "install",
-                    "-e",
-                    str(source_tree / "extensions" / "hermes-timeline-code-map"),
-                ]
+            timeline_project = (
+                source_tree / "extensions" / "hermes-timeline-code-map"
             )
+            timeline_installable = any(
+                (timeline_project / marker).is_file()
+                for marker in ("pyproject.toml", "setup.py", "setup.cfg")
+            )
+            runtime_imports = (
+                "import hermes_cli.supervisor_bootstrap, "
+                "hermes_cli.supervisor_registry"
+            )
+            if timeline_installable:
+                _run(
+                    [
+                        str(python),
+                        "-m",
+                        "pip",
+                        "install",
+                        "-e",
+                        str(timeline_project),
+                    ]
+                )
+                runtime_imports += ", hermes_timeline_code_map"
+                timeline_extension = "bundled"
+            else:
+                timeline_extension = "external_mcp_catalog"
             _run(
                 [
                     str(python),
                     "-c",
-                    "import hermes_cli.public_edition, hermes_timeline_code_map",
+                    runtime_imports,
                 ]
             )
 
@@ -174,6 +191,7 @@ def install(
             "release_path": str(final_release),
             "source_path": str(source_tree),
             "venv_path": str(venv_dir) if install_dependencies else None,
+            "timeline_extension": timeline_extension,
             "installed_at_utc": datetime.now(timezone.utc).isoformat(),
             "previous_release": previous.get("release_id") if previous else None,
             "patch_sha256": manifest.patch_sha256,
@@ -265,11 +283,22 @@ def doctor(*, root: Path | None = None) -> dict[str, Any]:
             if not python.is_file():
                 errors.append(f"managed Python missing: {python}")
             else:
+                runtime_imports = (
+                    "import hermes_cli.supervisor_bootstrap, "
+                    "hermes_cli.supervisor_registry"
+                )
+                if receipt.get("timeline_extension") == "bundled":
+                    runtime_imports += ", hermes_timeline_code_map"
+                elif receipt.get("timeline_extension") == "external_mcp_catalog":
+                    warnings.append(
+                        "Timeline Code Map is supplied by the operator MCP "
+                        "catalog, not embedded in this Hermes source release"
+                    )
                 probe = subprocess.run(
                     [
                         str(python),
                         "-c",
-                        "import hermes_cli.public_edition, hermes_timeline_code_map",
+                        runtime_imports,
                     ],
                     text=True,
                     capture_output=True,
@@ -324,23 +353,54 @@ def setup_public(
             f"Hermes state is not initialized at {home}. "
             f"Run `{prefix}hermes-control --root {root} run -- setup` first."
         )
-    command = [
-        str(python),
-        str(release / "source" / "scripts" / "setup_public_edition.py"),
-        "--home",
-        str(home),
-        "--repo-root",
-        str(release / "source"),
-    ]
-    if dry_run:
-        command.append("--dry-run")
-    if skip_opencode_install:
-        command.append("--skip-opencode-install")
-    if skip_timeline_install:
-        command.append("--skip-timeline-install")
-    if skip_live_health:
-        command.append("--skip-live-health")
-    completed = _run(command, capture=True)
+    source = release / "source"
+    legacy_setup = source / "scripts" / "setup_public_edition.py"
+    if legacy_setup.is_file():
+        command = [
+            str(python),
+            str(legacy_setup),
+            "--home",
+            str(home),
+            "--repo-root",
+            str(source),
+        ]
+        if dry_run:
+            command.append("--dry-run")
+        if skip_opencode_install:
+            command.append("--skip-opencode-install")
+        if skip_timeline_install:
+            command.append("--skip-timeline-install")
+        if skip_live_health:
+            command.append("--skip-live-health")
+    else:
+        unsupported = [
+            name
+            for name, enabled in (
+                ("--skip-opencode-install", skip_opencode_install),
+                ("--skip-timeline-install", skip_timeline_install),
+                ("--skip-live-health", skip_live_health),
+            )
+            if enabled
+        ]
+        if unsupported:
+            raise InstallError(
+                "this source uses `hermes supervisor install`; unsupported "
+                "legacy setup option(s): " + ", ".join(unsupported)
+            )
+        command = [
+            str(python),
+            "-m",
+            "hermes_cli.main",
+            "supervisor",
+            "install",
+            "--repo-root",
+            str(source),
+        ]
+        if dry_run:
+            command.append("--dry-run")
+    runtime_env = dict(os.environ)
+    runtime_env["HERMES_HOME"] = str(home)
+    completed = _run(command, capture=True, env=runtime_env)
     try:
         return json.loads(completed.stdout)
     except json.JSONDecodeError as exc:
@@ -455,6 +515,7 @@ def _run(
     cwd: Path | None = None,
     input_bytes: bytes | None = None,
     capture: bool = False,
+    env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess:
     try:
         return subprocess.run(
@@ -464,6 +525,7 @@ def _run(
             capture_output=capture,
             check=True,
             text=False if input_bytes is not None else capture,
+            env=env,
         )
     except FileNotFoundError as exc:
         raise InstallError(f"required command not found: {command[0]}") from exc
