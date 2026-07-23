@@ -13,6 +13,11 @@ Each supported upstream line owns these immutable artifacts:
 5. required architectural anchor paths;
 6. supported Python and operating-system bounds.
 
+The published patch and checksum set are self-contained. A maintainer may use
+an isolated private checkout while preparing a generic change, but installation
+must fetch only the declared official upstream baseline and must never require
+access to that private checkout or to a retired control repository.
+
 ## Upgrade procedure for an AI maintainer
 
 1. Fetch the new official upstream commit without changing a live checkout.

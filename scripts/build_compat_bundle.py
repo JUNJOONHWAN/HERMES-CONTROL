@@ -26,7 +26,7 @@ def main() -> int:
     parser.add_argument("--source-repo", type=Path, required=True)
     parser.add_argument("--baseline", required=True)
     parser.add_argument("--head", default="HEAD")
-    parser.add_argument("--compat-id", default="hermes-agent-0.18.0-control-0.1.8")
+    parser.add_argument("--compat-id", default="hermes-agent-0.18.0-control-0.1.9")
     parser.add_argument(
         "--project-root", type=Path, default=Path(__file__).resolve().parents[1]
     )

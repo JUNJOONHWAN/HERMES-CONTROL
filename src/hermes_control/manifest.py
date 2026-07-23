@@ -32,6 +32,7 @@ class CompatibilityManifest:
     checksums_file: str
     checksums_sha256: str
     patched_file_count: int
+    source_basis: str | None
     required_paths: tuple[str, ...]
 
     @classmethod
@@ -73,6 +74,11 @@ class CompatibilityManifest:
             checksums_file=str(bundle["checksums_file"]),
             checksums_sha256=_sha256(bundle["checksums_sha256"], "checksums_sha256"),
             patched_file_count=int(bundle["patched_file_count"]),
+            source_basis=(
+                str(bundle["source_basis"])
+                if bundle.get("source_basis") is not None
+                else None
+            ),
             required_paths=tuple(str(path) for path in payload["required_paths"]),
         )
         if not manifest.platforms:
@@ -104,6 +110,7 @@ class CompatibilityManifest:
                 "patch_sha256": self.patch_sha256,
                 "checksums_sha256": self.checksums_sha256,
                 "patched_file_count": self.patched_file_count,
+                "source_basis": self.source_basis,
             },
             "required_paths": list(self.required_paths),
         }
@@ -111,7 +118,7 @@ class CompatibilityManifest:
 
 def bundled_manifest() -> CompatibilityManifest:
     resource = files("hermes_control").joinpath(
-        "compatibility/hermes-agent-0.18.0-control-0.1.8/manifest.json"
+        "compatibility/hermes-agent-0.18.0-control-0.1.9/manifest.json"
     )
     return CompatibilityManifest.from_dict(json.loads(resource.read_text(encoding="utf-8")))
 
