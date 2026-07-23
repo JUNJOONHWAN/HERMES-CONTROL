@@ -1,0 +1,46 @@
+{
+  "schema": "hermes-control.compatibility.v1",
+  "overlay_version": "0.1.12",
+  "upstream": {
+    "name": "NousResearch/hermes-agent",
+    "url": "https://github.com/NousResearch/hermes-agent.git",
+    "version": "0.18.0",
+    "baseline_commit": "5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37"
+  },
+  "python": {
+    "min_inclusive": "3.11",
+    "max_exclusive": "3.14"
+  },
+  "platforms": [
+    "linux",
+    "darwin"
+  ],
+  "bundle": {
+    "patch_file": "patches/hermes-agent-0.18.0-control-0.1.12.patch.gz",
+    "patch_sha256": "e98a3a7bc8df18aafc039590fe0589f8bbcaeda46dd15a8fdef2ffd6c351854b",
+    "checksums_file": "compatibility/hermes-agent-0.18.0-control-0.1.12/files.sha256",
+    "checksums_sha256": "f07bcb0b4b115ea1fe216fe908254ecf1517852f7f872adc25c7677095a877aa",
+    "patched_file_count": 125,
+    "source_head": "8309921444c611c26b1f9dcc68e8fc027930705b",
+    "source_basis": "DGX LIVE 0.1.12 unified native executor lifecycle and durable override overlays"
+  },
+  "required_paths": [
+    "agent/supervisor_contract.py",
+    "distribution/release.json",
+    "gateway/run.py",
+    "hermes_cli/__init__.py",
+    "hermes_cli/free_worker_router.py",
+    "hermes_cli/openrouter_free_router.py",
+    "hermes_cli/capability_leases.py",
+    "hermes_cli/kanban_db.py",
+    "hermes_cli/project_card_controller.py",
+    "hermes_cli/supervisor_bootstrap.py",
+    "hermes_cli/supervisor_registry.py",
+    "hermes_cli/supervisor_tool_catalog.py",
+    "run_agent.py",
+    "tools/kanban_tools.py",
+    "tools/mcp_tool.py",
+    "tools/supervisor_tools.py",
+    "toolsets.py"
+  ]
+}

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from importlib.resources import files
+
 import pytest
 
 from hermes_control.installer import InstallError, check_host, parse_checksums
@@ -9,14 +11,33 @@ from hermes_control.manifest import ManifestError, bundled_manifest
 def test_bundled_manifest_is_strict_and_complete():
     manifest = bundled_manifest()
     assert manifest.schema == "hermes-control.compatibility.v1"
-    assert manifest.overlay_version == "0.1.11"
+    assert manifest.overlay_version == "0.1.12"
     assert manifest.baseline_commit == "5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37"
     assert manifest.source_basis == (
-        "DGX LIVE 0.1.11 universal controller mode and executor_opencode release"
+        "DGX LIVE 0.1.12 unified native executor lifecycle and durable override overlays"
     )
     assert manifest.platforms == ("linux", "darwin")
     assert manifest.patched_file_count > 50
     assert "distribution/release.json" in manifest.required_paths
+
+
+def test_current_bundle_has_no_team_or_timeline_cli_dependency():
+    manifest = bundled_manifest()
+    include_paths = files("hermes_control").joinpath(
+        "compatibility/hermes-agent-0.18.0-control-0.1.12/include-paths.txt"
+    ).read_text(encoding="utf-8")
+    contract_text = "\n".join(
+        (
+            include_paths,
+            manifest.patch_file,
+            manifest.checksums_file,
+            *manifest.required_paths,
+        )
+    ).lower()
+
+    assert "hermes-team" not in contract_text
+    assert "hermes_team" not in contract_text
+    assert "scripts/hermes_timeline_cli.py" not in contract_text
 
 
 @pytest.mark.parametrize("system", ["linux", "darwin", "Linux", "Darwin"])
