@@ -3,4 +3,4 @@
 from .manifest import CompatibilityManifest, bundled_manifest
 
 __all__ = ["CompatibilityManifest", "bundled_manifest"]
-__version__ = "0.1.9"
+__version__ = "0.1.10"
