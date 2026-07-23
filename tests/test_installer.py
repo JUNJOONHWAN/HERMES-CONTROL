@@ -16,6 +16,8 @@ def test_dry_run_has_no_side_effects(tmp_path):
     assert result["dry_run"] is True
     assert result["isolation"].startswith("managed release")
     assert result["fetch_strategy"] == "single exact upstream commit"
+    assert result["timeline_package"] == "hermes-timeline-code-map"
+    assert len(result["timeline_source_commit"]) == 40
     assert not root.exists()
 
 

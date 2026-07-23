@@ -3,19 +3,19 @@
 **English** | [한국어](README_KO.md)
 
 [![Compatibility](https://github.com/JUNJOONHWAN/HERMES-CONTROL/actions/workflows/compatibility.yml/badge.svg)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/actions/workflows/compatibility.yml)
-[![Release v0.1.11 Alpha](https://img.shields.io/badge/release-v0.1.11_alpha-f59e0b.svg)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/releases/tag/v0.1.11)
+[![Release v0.1.13 Alpha](https://img.shields.io/badge/release-v0.1.13_alpha-f59e0b.svg)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/releases/tag/v0.1.13)
 [![Python 3.11–3.13](https://img.shields.io/badge/python-3.11--3.13-3776AB.svg)](https://www.python.org/)
 [![Hermes Agent 0.18.0](https://img.shields.io/badge/Hermes_Agent-0.18.0-6f42c1.svg)](https://github.com/NousResearch/hermes-agent)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 **A version-gated governance and orchestration layer for Nous Hermes Agent.**
 
-HERMES-CONTROL is an independent distribution that adds role shells, card contracts, replaceable AI adapters, Timeline Code Map, NeuralLink, and a structured heartbeat to the official Hermes Agent.
+HERMES-CONTROL is an independent distribution that adds role shells, card contracts, replaceable AI adapters, a central Multitool capability catalog, card-scoped leases, Timeline Code Map, NeuralLink, and a structured heartbeat to the official Hermes Agent.
 
 > [!IMPORTANT]
 > HERMES-CONTROL is not an official Nous Research project. It does not redistribute a full fork of Hermes Agent. The installer fetches one verified upstream commit and applies a cryptographically pinned compatibility patch.
 
-**Current public release:** [HERMES-CONTROL v0.1.11 (Alpha)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/releases/tag/v0.1.11), built for Nous Hermes Agent `0.18.0`.
+**Current public release:** [HERMES-CONTROL v0.1.13 (Alpha)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/releases/tag/v0.1.13), built for Nous Hermes Agent `0.18.0`.
 
 ## What HERMES-CONTROL is
 
@@ -69,7 +69,7 @@ The Root Controller coordinates work but does not perform domain work itself. Th
 
 ## Recommended operating surfaces: Telegram and CLI
 
-Version `0.1.11` is documented and released as **Telegram/CLI-first**. Telegram is the conversational operator surface; the CLI is the exact inspection, installation, and recovery surface.
+Version `0.1.13` is documented and released as **Telegram/CLI-first**. Telegram is the conversational operator surface; the CLI is the exact inspection, installation, and recovery surface.
 
 Example Telegram requests:
 
@@ -93,11 +93,11 @@ hermes-control run -- kanban watch
 ```
 
 > [!CAUTION]
-> The Kanban Web UI is included as a supplementary control surface. The `v0.1.11` release gate did **not** claim a comprehensive browser/device matrix covering every button, drag-and-drop path, WebSocket recovery path, and mobile layout. Use Telegram and CLI as the recommended operating surfaces until that acceptance matrix is completed.
+> The Kanban Web UI is included as a supplementary control surface. The `v0.1.13` release gate did **not** claim a comprehensive browser/device matrix covering every button, drag-and-drop path, WebSocket recovery path, and mobile layout. Use Telegram and CLI as the recommended operating surfaces until that acceptance matrix is completed.
 
 Other explicit limits: free-model availability and quality can change at any time; NeuralLink recall can miss semantically related history; a valid Receipt proves recorded contract checks, not that an AI judgment is universally correct; and the public distribution does not include private credentials, operator state, or private know-how databases.
 
-The Timeline Code Map server is leased from the operator MCP catalog in `0.1.11`; it is not silently copied from a retired Hermes source tree. `doctor` reports this as an explicit external-catalog warning while still verifying the controller integration bundled in the managed Hermes runtime.
+Timeline Code Map source remains in its standalone DGX repository. CONTROL carries only a checksum-pinned wheel built from the exact source commit recorded in the compatibility manifest. At runtime Multitool owns the MCP catalog and every worker receives the minimum card-scoped lease; no worker profile or Hermes source tree contains a copied Timeline source.
 
 ## What is actually included
 
@@ -122,7 +122,7 @@ The distribution retains the standard Hermes profile, gateway, Kanban, and dashb
 
 ## Kanban state machine and supplementary web UI
 
-The Kanban ledger is not an optional visualization: it is the authoritative task state machine shared by people, AI workers, CLI automation, cron, and the dashboard. The browser UI is one supplementary view and control surface over that state; Telegram and CLI remain the recommended operator paths for `v0.1.11`.
+The Kanban ledger is not an optional visualization: it is the authoritative task state machine shared by people, AI workers, CLI automation, cron, and the dashboard. The browser UI is one supplementary view and control surface over that state; Telegram and CLI remain the recommended operator paths for `v0.1.13`.
 
 ```bash
 # The gateway hosts the embedded dispatcher on a 15-second interval

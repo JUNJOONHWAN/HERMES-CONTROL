@@ -11,11 +11,15 @@ from hermes_control.manifest import ManifestError, bundled_manifest
 def test_bundled_manifest_is_strict_and_complete():
     manifest = bundled_manifest()
     assert manifest.schema == "hermes-control.compatibility.v1"
-    assert manifest.overlay_version == "0.1.12"
+    assert manifest.overlay_version == "0.1.13"
     assert manifest.baseline_commit == "5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37"
     assert manifest.source_basis == (
-        "DGX LIVE 0.1.12 unified native executor lifecycle and durable override overlays"
+        "DGX LIVE 0.1.13 central Multitool MCP catalog and card-scoped leases"
     )
+    assert manifest.timeline_package == "hermes-timeline-code-map"
+    assert manifest.timeline_version == "0.1.1"
+    assert manifest.timeline_source_commit == "3a66a36fef96468705e5cc2d22645ba6f605e704"
+    assert manifest.timeline_wheel.endswith(".whl")
     assert manifest.platforms == ("linux", "darwin")
     assert manifest.patched_file_count > 50
     assert "distribution/release.json" in manifest.required_paths
@@ -24,7 +28,7 @@ def test_bundled_manifest_is_strict_and_complete():
 def test_current_bundle_has_no_team_or_timeline_cli_dependency():
     manifest = bundled_manifest()
     include_paths = files("hermes_control").joinpath(
-        "compatibility/hermes-agent-0.18.0-control-0.1.12/include-paths.txt"
+        "compatibility/hermes-agent-0.18.0-control-0.1.13/include-paths.txt"
     ).read_text(encoding="utf-8")
     contract_text = "\n".join(
         (
@@ -38,6 +42,7 @@ def test_current_bundle_has_no_team_or_timeline_cli_dependency():
     assert "hermes-team" not in contract_text
     assert "hermes_team" not in contract_text
     assert "scripts/hermes_timeline_cli.py" not in contract_text
+    assert "extensions/hermes-timeline-code-map" not in contract_text
 
 
 @pytest.mark.parametrize("system", ["linux", "darwin", "Linux", "Darwin"])
@@ -77,6 +82,14 @@ def test_manifest_rejects_short_baseline():
             "checksums_file": "compatibility/x.sha256",
             "checksums_sha256": "b" * 64,
             "patched_file_count": 1,
+        },
+        "timeline": {
+            "package": "hermes-timeline-code-map",
+            "version": "0.1.1",
+            "wheel": "artifacts/timeline.whl",
+            "wheel_sha256": "c" * 64,
+            "source_repository": "git@example/timeline.git",
+            "source_commit": "d" * 40,
         },
         "required_paths": ["safe"],
     }

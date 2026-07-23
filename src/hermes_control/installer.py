@@ -81,6 +81,10 @@ def install(
         "source": source_value,
         "upstream_commit": manifest.baseline_commit,
         "overlay_version": manifest.overlay_version,
+        "timeline_package": manifest.timeline_package,
+        "timeline_version": manifest.timeline_version,
+        "timeline_source_repository": manifest.timeline_source_repository,
+        "timeline_source_commit": manifest.timeline_source_commit,
         "install_dependencies": install_dependencies,
         "host": host,
         "isolation": "managed release; existing Hermes checkouts are not modified",
@@ -149,33 +153,37 @@ def install(
         if install_dependencies:
             _run([sys.executable, "-m", "venv", str(venv_dir)])
             python = _venv_python(venv_dir)
-            _run([str(python), "-m", "pip", "install", "-e", str(source_tree)])
-            timeline_project = (
-                source_tree / "extensions" / "hermes-timeline-code-map"
+            _run(
+                [
+                    str(python),
+                    "-m",
+                    "pip",
+                    "install",
+                    "-e",
+                    f"{source_tree}[mcp]",
+                ]
             )
-            timeline_installable = any(
-                (timeline_project / marker).is_file()
-                for marker in ("pyproject.toml", "setup.py", "setup.cfg")
+            timeline_wheel = bundle_resource(manifest.timeline_wheel)
+            timeline_bytes = timeline_wheel.read_bytes()
+            _verify_bytes(
+                timeline_bytes,
+                manifest.timeline_wheel_sha256,
+                "standalone Timeline wheel",
+            )
+            _run(
+                [
+                    str(python),
+                    "-m",
+                    "pip",
+                    "install",
+                    str(timeline_wheel),
+                ]
             )
             runtime_imports = (
                 "import hermes_cli.supervisor_bootstrap, "
-                "hermes_cli.supervisor_registry"
+                "hermes_cli.supervisor_registry, hermes_timeline_code_map"
             )
-            if timeline_installable:
-                _run(
-                    [
-                        str(python),
-                        "-m",
-                        "pip",
-                        "install",
-                        "-e",
-                        str(timeline_project),
-                    ]
-                )
-                runtime_imports += ", hermes_timeline_code_map"
-                timeline_extension = "bundled"
-            else:
-                timeline_extension = "external_mcp_catalog"
+            timeline_extension = "standalone_pinned_wheel"
             _run(
                 [
                     str(python),
@@ -192,6 +200,11 @@ def install(
             "source_path": str(source_tree),
             "venv_path": str(venv_dir) if install_dependencies else None,
             "timeline_extension": timeline_extension,
+            "timeline_package": manifest.timeline_package,
+            "timeline_version": manifest.timeline_version,
+            "timeline_wheel_sha256": manifest.timeline_wheel_sha256,
+            "timeline_source_repository": manifest.timeline_source_repository,
+            "timeline_source_commit": manifest.timeline_source_commit,
             "installed_at_utc": datetime.now(timezone.utc).isoformat(),
             "previous_release": previous.get("release_id") if previous else None,
             "patch_sha256": manifest.patch_sha256,
@@ -285,14 +298,18 @@ def doctor(*, root: Path | None = None) -> dict[str, Any]:
             else:
                 runtime_imports = (
                     "import hermes_cli.supervisor_bootstrap, "
-                    "hermes_cli.supervisor_registry"
+                    "hermes_cli.supervisor_registry, hermes_timeline_code_map"
                 )
-                if receipt.get("timeline_extension") == "bundled":
-                    runtime_imports += ", hermes_timeline_code_map"
-                elif receipt.get("timeline_extension") == "external_mcp_catalog":
-                    warnings.append(
-                        "Timeline Code Map is supplied by the operator MCP "
-                        "catalog, not embedded in this Hermes source release"
+                if receipt.get("timeline_extension") != "standalone_pinned_wheel":
+                    errors.append(
+                        "Timeline installation provenance is not the pinned "
+                        "standalone wheel"
+                    )
+                if receipt.get("timeline_source_commit") != manifest.timeline_source_commit:
+                    errors.append(
+                        "Timeline source commit drift: expected "
+                        f"{manifest.timeline_source_commit}, got "
+                        f"{receipt.get('timeline_source_commit')}"
                     )
                 probe = subprocess.run(
                     [

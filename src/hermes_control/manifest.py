@@ -33,6 +33,12 @@ class CompatibilityManifest:
     checksums_sha256: str
     patched_file_count: int
     source_basis: str | None
+    timeline_package: str
+    timeline_version: str
+    timeline_wheel: str
+    timeline_wheel_sha256: str
+    timeline_source_repository: str
+    timeline_source_commit: str
     required_paths: tuple[str, ...]
 
     @classmethod
@@ -44,6 +50,7 @@ class CompatibilityManifest:
             "python",
             "platforms",
             "bundle",
+            "timeline",
             "required_paths",
         }
         missing = sorted(required - payload.keys())
@@ -55,6 +62,7 @@ class CompatibilityManifest:
         upstream = payload["upstream"]
         python = payload["python"]
         bundle = payload["bundle"]
+        timeline = payload["timeline"]
         baseline = str(upstream["baseline_commit"])
         if len(baseline) != 40 or any(ch not in "0123456789abcdef" for ch in baseline):
             raise ManifestError("baseline_commit must be a full lowercase git SHA-1")
@@ -79,11 +87,26 @@ class CompatibilityManifest:
                 if bundle.get("source_basis") is not None
                 else None
             ),
+            timeline_package=str(timeline["package"]),
+            timeline_version=str(timeline["version"]),
+            timeline_wheel=str(timeline["wheel"]),
+            timeline_wheel_sha256=_sha256(
+                timeline["wheel_sha256"], "timeline.wheel_sha256"
+            ),
+            timeline_source_repository=str(timeline["source_repository"]),
+            timeline_source_commit=_commit(
+                timeline["source_commit"], "timeline.source_commit"
+            ),
             required_paths=tuple(str(path) for path in payload["required_paths"]),
         )
         if not manifest.platforms:
             raise ManifestError("platforms cannot be empty")
-        for path in (*manifest.required_paths, manifest.patch_file, manifest.checksums_file):
+        for path in (
+            *manifest.required_paths,
+            manifest.patch_file,
+            manifest.checksums_file,
+            manifest.timeline_wheel,
+        ):
             _safe_relative_path(path)
         return manifest
 
@@ -112,13 +135,20 @@ class CompatibilityManifest:
                 "patched_file_count": self.patched_file_count,
                 "source_basis": self.source_basis,
             },
+            "timeline": {
+                "package": self.timeline_package,
+                "version": self.timeline_version,
+                "wheel_sha256": self.timeline_wheel_sha256,
+                "source_repository": self.timeline_source_repository,
+                "source_commit": self.timeline_source_commit,
+            },
             "required_paths": list(self.required_paths),
         }
 
 
 def bundled_manifest() -> CompatibilityManifest:
     resource = files("hermes_control").joinpath(
-        "compatibility/hermes-agent-0.18.0-control-0.1.12/manifest.json"
+        "compatibility/hermes-agent-0.18.0-control-0.1.13/manifest.json"
     )
     return CompatibilityManifest.from_dict(json.loads(resource.read_text(encoding="utf-8")))
 
@@ -139,6 +169,13 @@ def _sha256(value: Any, field: str) -> str:
     token = str(value).lower()
     if len(token) != 64 or any(ch not in "0123456789abcdef" for ch in token):
         raise ManifestError(f"{field} must be a lowercase SHA-256")
+    return token
+
+
+def _commit(value: Any, field: str) -> str:
+    token = str(value).lower()
+    if len(token) != 40 or any(ch not in "0123456789abcdef" for ch in token):
+        raise ManifestError(f"{field} must be a full lowercase git SHA-1")
     return token
 
 

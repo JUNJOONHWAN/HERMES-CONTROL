@@ -38,7 +38,7 @@ jobs:
       - run: hermes-control --root "$RUNNER_TEMP/hermes-control" install
       - run: hermes-control --root "$RUNNER_TEMP/hermes-control" doctor
       - run: mkdir -p "$RUNNER_TEMP/hermes-state" && touch "$RUNNER_TEMP/hermes-state/config.yaml"
-      - run: hermes-control --root "$RUNNER_TEMP/hermes-control" setup --hermes-home "$RUNNER_TEMP/hermes-state" --dry-run --skip-opencode-install --skip-live-health
+      - run: hermes-control --root "$RUNNER_TEMP/hermes-control" setup --hermes-home "$RUNNER_TEMP/hermes-state" --dry-run
 
   overlay-regression:
     runs-on: ubuntu-latest
@@ -76,9 +76,40 @@ jobs:
             tests/run_agent/test_opencode_zen_anonymous_free.py \
             tests/scripts/test_market_memory.py \
             tests/test_application_services.py
-      - name: Timeline extension regression
-        working-directory: ${{ runner.temp }}/hermes-control/current/source/extensions/hermes-timeline-code-map
-        run: "../../../venv/bin/python -m pytest tests"
+      - name: Standalone Timeline MCP regression
+        env:
+          TIMELINE_CODE_MAP_DB_PATH: ${{ runner.temp }}/timeline-smoke.db
+        run: |
+          "$RUNNER_TEMP/hermes-control/current/venv/bin/python" - <<'PY'
+          import asyncio
+          import os
+          import sys
+          from mcp import ClientSession, StdioServerParameters
+          from mcp.client.stdio import stdio_client
+
+          async def main():
+              params = StdioServerParameters(
+                  command=sys.executable,
+                  args=["-m", "hermes_timeline_code_map.mcp_server"],
+                  env={
+                      **os.environ,
+                      "TIMELINE_CODE_MAP_DB_PATH": os.environ["TIMELINE_CODE_MAP_DB_PATH"],
+                  },
+              )
+              async with stdio_client(params) as (read, write):
+                  async with ClientSession(read, write) as session:
+                      await session.initialize()
+                      tools = {tool.name for tool in (await session.list_tools()).tools}
+                      required = {
+                          "get_context_tool",
+                          "record_node",
+                          "query_code_slice_tool",
+                          "verify_all_tool",
+                      }
+                      assert required <= tools, sorted(tools)
+
+          asyncio.run(main())
+          PY
       - name: Full upstream regression
         working-directory: ${{ runner.temp }}/hermes-control/current/source
         run: ./scripts/run_tests.sh -j 4 --exclude-manifest distribution/validation/test_exclusions.json

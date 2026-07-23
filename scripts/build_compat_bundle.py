@@ -21,12 +21,29 @@ def capture(command: list[str], *, cwd: Path, text: bool = False):
     ).stdout
 
 
+def validate_include_paths(paths: list[str], tracked_paths: set[str]) -> None:
+    missing: list[str] = []
+    for path in paths:
+        candidate = Path(path)
+        if candidate.is_absolute() or ".." in candidate.parts:
+            raise SystemExit(f"unsafe include path: {path}")
+        prefix = path.rstrip("/") + "/"
+        if path not in tracked_paths and not any(
+            tracked.startswith(prefix) for tracked in tracked_paths
+        ):
+            missing.append(path)
+    if missing:
+        raise SystemExit(
+            "required include path(s) missing from source head: " + ", ".join(missing)
+        )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-repo", type=Path, required=True)
     parser.add_argument("--baseline", required=True)
     parser.add_argument("--head", default="HEAD")
-    parser.add_argument("--compat-id", default="hermes-agent-0.18.0-control-0.1.12")
+    parser.add_argument("--compat-id", default="hermes-agent-0.18.0-control-0.1.13")
     parser.add_argument(
         "--project-root", type=Path, default=Path(__file__).resolve().parents[1]
     )
@@ -46,6 +63,14 @@ def main() -> int:
         for line in include_path.read_text(encoding="utf-8").splitlines()
         if line.strip() and not line.lstrip().startswith("#")
     ]
+    tracked_paths = set(
+        capture(
+            ["git", "ls-tree", "-r", "--name-only", args.head],
+            cwd=source,
+            text=True,
+        ).splitlines()
+    )
+    validate_include_paths(paths, tracked_paths)
     capture(["git", "cat-file", "-e", f"{args.baseline}^{{commit}}"], cwd=source)
     head = capture(["git", "rev-parse", args.head], cwd=source, text=True).strip()
     release = json.loads(
