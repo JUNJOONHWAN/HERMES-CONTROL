@@ -53,6 +53,7 @@ def test_ci_full_regression_uses_current_test_runner_contract():
         Path(__file__).resolve().parents[1] / ".github/workflows/compatibility.yml"
     ).read_text(encoding="utf-8")
 
+    assert "source[dev,acp,messaging,wecom]" in workflow
     assert "run: ./scripts/run_tests.sh -j 4" in workflow
     assert "--exclude-manifest" not in workflow
 

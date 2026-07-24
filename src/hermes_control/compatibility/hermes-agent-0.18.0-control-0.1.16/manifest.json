@@ -17,11 +17,11 @@
   ],
   "bundle": {
     "patch_file": "patches/hermes-agent-0.18.0-control-0.1.16.patch.gz",
-    "patch_sha256": "01babc655a7d7246e75e87ddbb7e769d4fd77e477509af3c152242db83f66395",
+    "patch_sha256": "46ed7339ca7d0d99ea7f594ba598f1aabe87854ba39cff1171341ad826e66dd4",
     "checksums_file": "compatibility/hermes-agent-0.18.0-control-0.1.16/files.sha256",
-    "checksums_sha256": "09e88d861d0a40f512ed9d6c5621d97ea91c78531b02bc7fb9b9ed9068a95fe6",
+    "checksums_sha256": "3c4744c531f0a29dc9ecd4e91b9b159b6101438ad1eb442d7bc2647a5e61a671",
     "patched_file_count": 138,
-    "source_head": "007d49a174e69cce9b2bb5f3473e9c4d2202e44b",
+    "source_head": "26221eb3142a919cbac04724a1e528da45d954f5",
     "source_basis": "DGX LIVE 0.1.16 terminal-contract respawn guard, setup-approved shell defaults, normalized Multitool additional rentals, and full capability impact reports"
   },
   "timeline": {
