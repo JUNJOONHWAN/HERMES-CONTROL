@@ -148,7 +148,7 @@ class CompatibilityManifest:
 
 def bundled_manifest() -> CompatibilityManifest:
     resource = files("hermes_control").joinpath(
-        "compatibility/hermes-agent-0.18.0-control-0.1.13/manifest.json"
+        "compatibility/hermes-agent-0.18.0-control-0.1.15/manifest.json"
     )
     return CompatibilityManifest.from_dict(json.loads(resource.read_text(encoding="utf-8")))
 

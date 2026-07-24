@@ -22,6 +22,16 @@ The root Hermes process is a governance plane. It accepts the user objective, cr
 
 A role shell is a durable policy contract. It defines allowed task classes, preferred executor adapter, MCP/tool catalog, capacity, receipt requirements and escalation behavior. A binding connects a shell to an adapter. An override changes that relation once, temporarily or permanently while preserving an audit record.
 
+Default MCP rental approval is part of initial Role Shell setup. Approved
+defaults are granted atomically on the original card and are displayed there;
+they do not create a Multitool card. Only an additional capability outside the
+approved default set is normalized and delegated to a separate `tool-management`
+dependency card. Every required, allowed, or default capability membership
+change must create a full impact report before the new immutable shell version
+becomes active. The report covers open cards, active leases, affected shells,
+catalog ownership, runtime projection and notification paths, and CONTROL
+distribution gates.
+
 Adapters are replaceable execution edges. The seven ordinary Role Shells may use
 OpenCode free or OpenRouter strict-free command executors. Those routers refresh
 their live catalog before each task, reject non-free or ineligible models, and

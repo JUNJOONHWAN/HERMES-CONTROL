@@ -1,0 +1,56 @@
+{
+  "schema": "hermes-control.compatibility.v1",
+  "overlay_version": "0.1.15",
+  "upstream": {
+    "name": "NousResearch/hermes-agent",
+    "url": "https://github.com/NousResearch/hermes-agent.git",
+    "version": "0.18.0",
+    "baseline_commit": "5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37"
+  },
+  "python": {
+    "min_inclusive": "3.11",
+    "max_exclusive": "3.14"
+  },
+  "platforms": [
+    "linux",
+    "darwin"
+  ],
+  "bundle": {
+    "patch_file": "patches/hermes-agent-0.18.0-control-0.1.15.patch.gz",
+    "patch_sha256": "9bd80babc935c5175bef44352d5c4e11d565c8405efaa1449046e0dc7a775785",
+    "checksums_file": "compatibility/hermes-agent-0.18.0-control-0.1.15/files.sha256",
+    "checksums_sha256": "e83a51d51cd44386496d8e8ffdb88057cdbdb200f347d5bba9efeb0e97e6a2a6",
+    "patched_file_count": 136,
+    "source_head": "21d7eab9863ad830ae5fdedd6fdb4158ac4d1239",
+    "source_basis": "DGX LIVE 0.1.15 setup-approved shell defaults, normalized Multitool additional rentals, and full capability impact reports"
+  },
+  "timeline": {
+    "package": "hermes-timeline-code-map",
+    "version": "0.1.1",
+    "wheel": "artifacts/hermes_timeline_code_map-0.1.1-py3-none-any.whl",
+    "wheel_sha256": "a4769ba957bbb3bee548ab506b9b20af59fbe2b7c620687ab1ffda92a6447ad2",
+    "source_repository": "git@github.com:JUNJOONHWAN/hermes--timeline-code-map.git",
+    "source_commit": "3a66a36fef96468705e5cc2d22645ba6f605e704"
+  },
+  "required_paths": [
+    "agent/supervisor_contract.py",
+    "distribution/release.json",
+    "gateway/run.py",
+    "hermes_cli/__init__.py",
+    "hermes_cli/executor_adapter.py",
+    "hermes_cli/free_worker_router.py",
+    "hermes_cli/openrouter_free_router.py",
+    "hermes_cli/capability_leases.py",
+    "hermes_cli/kanban_db.py",
+    "hermes_cli/mcp_startup.py",
+    "hermes_cli/project_card_controller.py",
+    "hermes_cli/supervisor_bootstrap.py",
+    "hermes_cli/supervisor_registry.py",
+    "hermes_cli/supervisor_tool_catalog.py",
+    "run_agent.py",
+    "tools/kanban_tools.py",
+    "tools/mcp_tool.py",
+    "tools/supervisor_tools.py",
+    "toolsets.py"
+  ]
+}

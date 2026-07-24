@@ -3,7 +3,7 @@
 **English** | [한국어](README_KO.md)
 
 [![Compatibility](https://github.com/JUNJOONHWAN/HERMES-CONTROL/actions/workflows/compatibility.yml/badge.svg)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/actions/workflows/compatibility.yml)
-[![Release v0.1.13 Alpha](https://img.shields.io/badge/release-v0.1.13_alpha-f59e0b.svg)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/releases/tag/v0.1.13)
+[![Release v0.1.15 Alpha](https://img.shields.io/badge/release-v0.1.15_alpha-f59e0b.svg)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/releases/tag/v0.1.15)
 [![Python 3.11–3.13](https://img.shields.io/badge/python-3.11--3.13-3776AB.svg)](https://www.python.org/)
 [![Hermes Agent 0.18.0](https://img.shields.io/badge/Hermes_Agent-0.18.0-6f42c1.svg)](https://github.com/NousResearch/hermes-agent)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -15,7 +15,7 @@ HERMES-CONTROL is an independent distribution that adds role shells, card contra
 > [!IMPORTANT]
 > HERMES-CONTROL is not an official Nous Research project. It does not redistribute a full fork of Hermes Agent. The installer fetches one verified upstream commit and applies a cryptographically pinned compatibility patch.
 
-**Current public release:** [HERMES-CONTROL v0.1.13 (Alpha)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/releases/tag/v0.1.13), built for Nous Hermes Agent `0.18.0`.
+**Current public release:** [HERMES-CONTROL v0.1.15 (Alpha)](https://github.com/JUNJOONHWAN/HERMES-CONTROL/releases/tag/v0.1.15), built for Nous Hermes Agent `0.18.0`.
 
 ## What HERMES-CONTROL is
 
@@ -69,7 +69,7 @@ The Root Controller coordinates work but does not perform domain work itself. Th
 
 ## Recommended operating surfaces: Telegram and CLI
 
-Version `0.1.13` is documented and released as **Telegram/CLI-first**. Telegram is the conversational operator surface; the CLI is the exact inspection, installation, and recovery surface.
+Version `0.1.15` is documented and released as **Telegram/CLI-first**. Telegram is the conversational operator surface; the CLI is the exact inspection, installation, and recovery surface.
 
 Example Telegram requests:
 
@@ -93,7 +93,7 @@ hermes-control run -- kanban watch
 ```
 
 > [!CAUTION]
-> The Kanban Web UI is included as a supplementary control surface. The `v0.1.13` release gate did **not** claim a comprehensive browser/device matrix covering every button, drag-and-drop path, WebSocket recovery path, and mobile layout. Use Telegram and CLI as the recommended operating surfaces until that acceptance matrix is completed.
+> The Kanban Web UI is included as a supplementary control surface. The `v0.1.15` release gate did **not** claim a comprehensive browser/device matrix covering every button, drag-and-drop path, WebSocket recovery path, and mobile layout. Use Telegram and CLI as the recommended operating surfaces until that acceptance matrix is completed.
 
 Other explicit limits: free-model availability and quality can change at any time; NeuralLink recall can miss semantically related history; a valid Receipt proves recorded contract checks, not that an AI judgment is universally correct; and the public distribution does not include private credentials, operator state, or private know-how databases.
 
@@ -122,7 +122,7 @@ The distribution retains the standard Hermes profile, gateway, Kanban, and dashb
 
 ## Kanban state machine and supplementary web UI
 
-The Kanban ledger is not an optional visualization: it is the authoritative task state machine shared by people, AI workers, CLI automation, cron, and the dashboard. The browser UI is one supplementary view and control surface over that state; Telegram and CLI remain the recommended operator paths for `v0.1.13`.
+The Kanban ledger is not an optional visualization: it is the authoritative task state machine shared by people, AI workers, CLI automation, cron, and the dashboard. The browser UI is one supplementary view and control surface over that state; Telegram and CLI remain the recommended operator paths for `v0.1.15`.
 
 ```bash
 # The gateway hosts the embedded dispatcher on a 15-second interval
@@ -274,7 +274,7 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 | Item | Current contract |
 |---|---|
-| HERMES-CONTROL | `0.1.11` (Alpha) |
+| HERMES-CONTROL | `0.1.15` (Alpha) |
 | Nous Hermes Agent | `0.18.0` |
 | Pinned upstream commit | `5445e42b87b9918d5b1bfa9f4eadd8e4bb10ff37` |
 | Python | `>=3.11,<3.14` |
@@ -285,7 +285,13 @@ Source upgrades never copy operator state. Private know-how databases, API keys,
 
 The installer refuses to patch an unsupported upstream version. Activation requires the exact baseline commit, patch SHA-256, a successful `git apply --check`, SHA-256 verification of every file declared by the manifest, required paths, and runtime import probes.
 
-`0.1.11` preserves the historical `0.1.0` through `0.1.10` bundles and packages the audited DGX LIVE release as a new immutable overlay. It adds provider-independent controller mode for every controller-capable executor, injects one fixed six-tool Supervisor surface, stops ordinary explanatory questions from forcing control calls, and replaces the HY3-specific path with `executor_opencode` plus a Codex fallback. Installation still fetches only the official Nous `0.18.0` baseline and never requires access to a personal checkout or a retired repository.
+`0.1.15` preserves every historical bundle and packages the audited DGX LIVE
+release as a new immutable overlay. It retains provider-independent controller
+mode and adds setup-approved Role Shell default rentals, normalized Multitool
+cards only for additional rentals, visible rental provenance on the original
+card, and full impact reports for capability membership changes. Installation
+still fetches only the official Nous `0.18.0` baseline and never requires access
+to a personal checkout or a retired repository.
 
 ## Installation
 
@@ -449,6 +455,15 @@ Pagent and qagent are not architectural dependencies. They can be attached as op
 
 HERMES-CONTROL does not attach every MCP to root. Root remains zero-domain-MCP. A `tool-management` card runs on the capacity-one `hermes-worker-multitool` executor and owns the tool lifecycle.
 
+Each Role Shell decides its default MCP rentals once at shell setup. An approved
+default is attached atomically to the original card and shown as an automatic
+default rental; it does not create a second card or add a model turn. A
+capability outside that approved set is normalized to an exact MCP, skill, or
+toolset request and receives a separate Multitool dependency card. Changing any
+required, allowed, or default capability membership creates a versioned full
+impact report covering open cards, active leases, other shells, catalog owners,
+runtime projections, notifications, and Linux/macOS distribution surfaces.
+
 The tool catalog reports the complete inventory **by name and assignment** without exposing credentials or raw MCP definitions:
 
 - per-profile `mcp_servers`;
@@ -550,7 +565,9 @@ See the [upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md) for th
 
 ## Validation
 
-The following numbers are the existing 0.1.5 validation record. Version 0.1.11 is validated separately through its new immutable bundle and current GitHub Actions run.
+The following numbers are the existing 0.1.5 validation record. Version 0.1.15
+is validated separately through its new immutable bundle and DGX full
+regression; GitHub Actions status is reported separately for the release.
 
 - HERMES-CONTROL unit suite: 19 passed
 - Official-upstream source-backed installer module: 2 passed
@@ -590,7 +607,7 @@ pytest -q
 - [AI operations manual](docs/AI_OPERATIONS_MANUAL.md): installation state machine, cards and receipts, shell and adapter extension, and release gate
 - [Architecture overview](docs/ARCHITECTURE_KO.md): component and execution-flow summary
 - [Upstream compatibility contract](docs/UPSTREAM_COMPATIBILITY.md): baseline updates and fail-closed policy
-- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.11/include-paths.txt): extraction scope of the overlay bundle
+- [Current patch include paths](src/hermes_control/compatibility/hermes-agent-0.18.0-control-0.1.15/include-paths.txt): extraction scope of the overlay bundle
 
 ## Out of scope
 
