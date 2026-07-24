@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from importlib.resources import files
+from pathlib import Path
 
 import pytest
 
@@ -43,6 +44,15 @@ def test_current_bundle_has_no_team_or_timeline_cli_dependency():
     assert "hermes_team" not in contract_text
     assert "scripts/hermes_timeline_cli.py" not in contract_text
     assert "extensions/hermes-timeline-code-map" not in contract_text
+
+
+def test_ci_full_regression_uses_current_test_runner_contract():
+    workflow = (
+        Path(__file__).resolve().parents[1] / ".github/workflows/compatibility.yml"
+    ).read_text(encoding="utf-8")
+
+    assert "run: ./scripts/run_tests.sh -j 4" in workflow
+    assert "--exclude-manifest" not in workflow
 
 
 @pytest.mark.parametrize("system", ["linux", "darwin", "Linux", "Darwin"])

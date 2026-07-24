@@ -112,4 +112,4 @@ jobs:
           PY
       - name: Full upstream regression
         working-directory: ${{ runner.temp }}/hermes-control/current/source
-        run: ./scripts/run_tests.sh -j 4 --exclude-manifest distribution/validation/test_exclusions.json
+        run: ./scripts/run_tests.sh -j 4
